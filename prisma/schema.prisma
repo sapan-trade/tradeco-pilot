@@ -1,0 +1,303 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+/// Platform-level user; identity owned by Clerk in later phases, mirrored here for FK integrity.
+model User {
+  id          String         @id
+  email       String         @unique
+  name        String?
+  createdAt   DateTime       @default(now())
+  memberships Membership[]
+  reviews     BrokerReview[] @relation("BrokerUser")
+  auditEvents AuditLog[]
+}
+
+/// A customer tenant. All domain data is scoped by orgId.
+model Organization {
+  id              String               @id
+  name            String
+  country         String
+  createdAt       DateTime             @default(now())
+  settings        Json                 @default("{}")
+  memberships     Membership[]
+  subscription    Subscription?
+  skus            Sku[]
+  classifications Classification[]
+  declarations    Declaration[]
+  estimates       LandedCostEstimate[]
+  auditLogs       AuditLog[]
+  connectors      Connector[]
+  imports         ImportJob[]
+}
+
+enum OrgRole {
+  OWNER
+  MEMBER
+  BROKER
+  ADMIN
+}
+
+/// User <-> Org join with per-org role. A user can belong to many orgs.
+model Membership {
+  id     String       @id @default(cuid())
+  userId String
+  orgId  String
+  role   OrgRole
+  user   User         @relation(fields: [userId], references: [id], onDelete: Cascade)
+  org    Organization @relation(fields: [orgId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, orgId])
+  @@index([orgId])
+}
+
+enum SubscriptionTier {
+  STARTER
+  GROWTH
+  PRO
+}
+
+enum SubscriptionStatus {
+  TRIALING
+  ACTIVE
+  PAST_DUE
+  CANCELED
+}
+
+/// One per org; mirrors Stripe subscription state for fast reads. Populated in Phase 3.
+model Subscription {
+  id                   String             @id @default(cuid())
+  orgId                String             @unique
+  tier                 SubscriptionTier
+  status               SubscriptionStatus
+  stripeCustomerId     String             @unique
+  stripeSubscriptionId String?            @unique
+  skuAllowance         Int
+  currentPeriodEnd     DateTime
+  org                  Organization       @relation(fields: [orgId], references: [id], onDelete: Cascade)
+}
+
+/// A product the tenant ships. Inputs to classification live here.
+model Sku {
+  id              String           @id @default(cuid())
+  orgId           String
+  externalId      String?
+  source          String           @default("manual")
+  title           String
+  description     String?
+  materials       Json?
+  imageUrls       String[]
+  supplierCountry String?
+  unitValueCents  Int?
+  currency        String           @default("USD")
+  createdAt       DateTime         @default(now())
+  updatedAt       DateTime         @updatedAt
+  org             Organization     @relation(fields: [orgId], references: [id], onDelete: Cascade)
+  classifications Classification[]
+
+  @@unique([orgId, externalId])
+  @@index([orgId, createdAt])
+}
+
+enum ClassificationStatus {
+  PENDING
+  AUTO_APPROVED
+  NEEDS_REVIEW
+  BROKER_APPROVED
+  BROKER_REJECTED
+  OVERRIDDEN
+}
+
+/// One AI prediction per (sku, destination). Re-run produces a new row; older rows kept for audit.
+model Classification {
+  id           String               @id @default(cuid())
+  orgId        String
+  skuId        String
+  destination  String
+  hsCode       String
+  confidence   Float
+  rationale    String
+  modelVersion String
+  inputHash    String
+  status       ClassificationStatus @default(PENDING)
+  ftaEligible  Boolean?
+  ftaProgram   String?
+  createdAt    DateTime             @default(now())
+  org          Organization         @relation(fields: [orgId], references: [id], onDelete: Cascade)
+  sku          Sku                  @relation(fields: [skuId], references: [id], onDelete: Cascade)
+  review       BrokerReview?
+  declarations Declaration[]
+  estimates    LandedCostEstimate[]
+
+  @@index([orgId, status])
+  @@index([skuId, destination, createdAt])
+}
+
+enum DeclarationStatus {
+  DRAFT
+  SUBMITTED
+  ACCEPTED
+  REJECTED
+}
+
+/// A customs filing unit. Billing meter increments on transition to SUBMITTED (Phase 2+).
+model Declaration {
+  id               String            @id @default(cuid())
+  orgId            String
+  classificationId String
+  destination      String
+  shipmentRef      String?
+  totalDutyCents   Int?
+  status           DeclarationStatus @default(DRAFT)
+  submittedAt      DateTime?
+  packageJson      Json
+  createdAt        DateTime          @default(now())
+  org              Organization      @relation(fields: [orgId], references: [id], onDelete: Cascade)
+  classification   Classification    @relation(fields: [classificationId], references: [id])
+
+  @@index([orgId, status])
+}
+
+enum BrokerDecision {
+  APPROVED
+  CORRECTED
+  REJECTED
+}
+
+/// Human-in-the-loop sign-off when classification confidence is below tenant threshold. Phase 2 wires the queue.
+model BrokerReview {
+  id               String          @id @default(cuid())
+  classificationId String          @unique
+  brokerUserId     String?
+  decision         BrokerDecision?
+  correctedHsCode  String?
+  notes            String?
+  decidedAt        DateTime?
+  createdAt        DateTime        @default(now())
+  classification   Classification  @relation(fields: [classificationId], references: [id], onDelete: Cascade)
+  broker           User?           @relation("BrokerUser", fields: [brokerUserId], references: [id])
+
+  @@index([brokerUserId, decidedAt])
+}
+
+/// Computed landed cost snapshot tied to a classification at a point in time. Phase 2.
+model LandedCostEstimate {
+  id               String         @id @default(cuid())
+  orgId            String
+  classificationId String
+  destination      String
+  dutyRateBps      Int
+  vatRateBps       Int
+  freightCents     Int
+  feesCents        Int
+  unitValueCents   Int
+  totalLandedCents Int
+  computedAt       DateTime       @default(now())
+  org              Organization   @relation(fields: [orgId], references: [id], onDelete: Cascade)
+  classification   Classification @relation(fields: [classificationId], references: [id], onDelete: Cascade)
+
+  @@index([classificationId, computedAt])
+}
+
+enum RegulatorySeverity {
+  INFO
+  WARN
+  CRITICAL
+}
+
+/// Items pulled from external regulatory feeds; surfaced as alerts. Phase 2.
+model RegulatoryUpdate {
+  id           String             @id @default(cuid())
+  source       String
+  externalId   String
+  title        String
+  url          String
+  severity     RegulatorySeverity @default(INFO)
+  affectedHs   String[]
+  affectedDest String[]
+  publishedAt  DateTime
+  ingestedAt   DateTime           @default(now())
+
+  @@unique([source, externalId])
+  @@index([publishedAt])
+}
+
+enum ConnectorType {
+  SHOPIFY
+  NETSUITE
+  SHIPSTATION
+}
+
+enum ConnectorStatus {
+  PENDING
+  ACTIVE
+  ERROR
+  REVOKED
+}
+
+/// Per-org connection to an external system. Phase 4 wires Shopify; NetSuite / ShipStation reserved.
+model Connector {
+  id           String          @id @default(cuid())
+  orgId        String
+  type         ConnectorType
+  status       ConnectorStatus @default(PENDING)
+  shopDomain   String?
+  accessToken  String?
+  scopes       String[]        @default([])
+  lastSyncAt   DateTime?
+  errorMessage String?
+  createdAt    DateTime        @default(now())
+  updatedAt    DateTime        @updatedAt
+  org          Organization    @relation(fields: [orgId], references: [id], onDelete: Cascade)
+
+  @@unique([orgId, type])
+  @@index([orgId])
+}
+
+enum ImportJobStatus {
+  PENDING
+  PROCESSING
+  COMPLETED
+  FAILED
+}
+
+/// Async CSV / bulk-upload jobs. The Inngest worker updates progress fields as it runs.
+model ImportJob {
+  id          String          @id @default(cuid())
+  orgId       String
+  fileToken   String
+  status      ImportJobStatus @default(PENDING)
+  totalRows   Int             @default(0)
+  inserted    Int             @default(0)
+  failed      Int             @default(0)
+  errors      Json?
+  startedAt   DateTime?
+  finishedAt  DateTime?
+  createdAt   DateTime        @default(now())
+  org         Organization    @relation(fields: [orgId], references: [id], onDelete: Cascade)
+
+  @@index([orgId, createdAt])
+}
+
+/// Append-only. `prevHash` chains rows to detect tampering. No updates, no deletes.
+model AuditLog {
+  id        String       @id @default(cuid())
+  orgId     String
+  userId    String?
+  action    String
+  subject   String
+  payload   Json
+  prevHash  String?
+  hash      String
+  createdAt DateTime     @default(now())
+  org       Organization @relation(fields: [orgId], references: [id], onDelete: Cascade)
+  user      User?        @relation(fields: [userId], references: [id])
+
+  @@index([orgId, createdAt])
+  @@index([subject])
+}

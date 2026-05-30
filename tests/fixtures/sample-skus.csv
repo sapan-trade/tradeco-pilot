@@ -1,0 +1,6 @@
+title,description,supplier_country,unit_value_cents,image_url
+Men's cotton T-shirt,100% cotton knit tee,VN,1500,https://example.com/tshirt.jpg
+Ceramic mug,"Porcelain coffee mug, 12oz",MX,800,https://example.com/mug.jpg
+Smartphone Model X,5G mobile phone 128GB,CN,80000,
+,no title here should fail,US,100,
+Laptop notebook,Portable computer 15",CN,150000,https://example.com/laptop.jpg

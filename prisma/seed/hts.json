@@ -1,0 +1,46 @@
+{
+  "codes": [
+    {
+      "hs": "6109.10.0010",
+      "title": "T-shirts, knit, of cotton, men's or boys'",
+      "chapter": "61",
+      "dutyRateBps": 1660,
+      "keywords": ["shirt", "tshirt", "tee", "polo", "knit", "cotton"]
+    },
+    {
+      "hs": "6203.42.1000",
+      "title": "Men's trousers and shorts, of cotton, not knitted",
+      "chapter": "62",
+      "dutyRateBps": 870,
+      "keywords": ["trouser", "trousers", "pants", "jeans", "shorts", "cotton"]
+    },
+    {
+      "hs": "6505.00.4000",
+      "title": "Hats and other headgear, knitted or crocheted",
+      "chapter": "65",
+      "dutyRateBps": 800,
+      "keywords": ["hat", "cap", "headgear", "beanie"]
+    },
+    {
+      "hs": "8517.13.0000",
+      "title": "Smartphones",
+      "chapter": "85",
+      "dutyRateBps": 0,
+      "keywords": ["phone", "smartphone", "mobile", "cellular"]
+    },
+    {
+      "hs": "8471.30.0100",
+      "title": "Portable automatic data processing machines (laptops)",
+      "chapter": "84",
+      "dutyRateBps": 0,
+      "keywords": ["laptop", "notebook", "computer", "macbook"]
+    },
+    {
+      "hs": "6911.10.4100",
+      "title": "Ceramic tableware, porcelain or china",
+      "chapter": "69",
+      "dutyRateBps": 2050,
+      "keywords": ["mug", "cup", "ceramic", "porcelain", "tableware", "china"]
+    }
+  ]
+}

@@ -1,0 +1,13 @@
+node_modules
+.next
+.env
+.env.local
+*.log
+.prisma
+prisma/.env
+dist
+coverage
+next-env.d.ts
+test-results/
+playwright-report/
+.vercel/
