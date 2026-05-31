@@ -2,6 +2,10 @@ import Link from "next/link";
 import { CreateOrganization, OrganizationSwitcher, UserButton } from "@clerk/nextjs";
 import { getServerCaller } from "@/lib/server-caller";
 
+// Server actions on the dashboard (Classify, Submit, etc.) call Claude which
+// can take 5-15s. Hobby plan default is 10s; bump per-route to 60s.
+export const maxDuration = 60;
+
 export default async function DashboardLayout({ children }: { children: React.ReactNode }) {
   const { ctx } = await getServerCaller();
 
