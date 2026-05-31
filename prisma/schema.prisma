@@ -227,6 +227,22 @@ model RegulatoryUpdate {
   @@index([publishedAt])
 }
 
+/// Temporary debug table — records every Stripe webhook that hits the endpoint.
+/// Drop once webhook flow is verified.
+model StripeWebhookDebug {
+  id          String   @id @default(cuid())
+  receivedAt  DateTime @default(now())
+  eventType   String
+  eventId     String?
+  signatureOk Boolean
+  processedOk Boolean
+  errorMsg    String?
+  orgIdSeen   String?
+  bodySnippet String?
+
+  @@index([receivedAt])
+}
+
 enum ConnectorType {
   SHOPIFY
   NETSUITE
