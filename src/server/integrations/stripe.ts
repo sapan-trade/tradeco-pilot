@@ -28,6 +28,8 @@ class RealStripeClient implements StripeClient {
       success_url: `${appUrl}/settings/billing?success=1`,
       cancel_url: `${appUrl}/settings/billing?canceled=1`,
       metadata: { orgId, tier },
+      // Propagate orgId to the Subscription itself so customer.subscription.* events carry it.
+      subscription_data: { metadata: { orgId, tier } },
     });
     return { url: session.url ?? "" };
   }

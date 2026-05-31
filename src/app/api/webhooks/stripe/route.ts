@@ -70,20 +70,49 @@ export async function POST(req: Request) {
       });
       break;
     }
+    case "customer.subscription.created":
     case "customer.subscription.updated":
     case "customer.subscription.deleted": {
       const sub = event.data.object as Stripe.Subscription;
+      const orgId = sub.metadata?.orgId;
       const priceId = sub.items.data[0]?.price?.id ?? "";
-      const tier = TIER_BY_PRICE[priceId] ?? "STARTER";
-      await prisma.subscription.updateMany({
-        where: { stripeSubscriptionId: sub.id },
-        data: {
-          tier,
-          status: mapStatus(sub.status),
-          skuAllowance: ALLOWANCE[tier],
-          currentPeriodEnd: new Date(sub.current_period_end * 1000),
-        },
-      });
+      const tier = (sub.metadata?.tier as Tier) ?? TIER_BY_PRICE[priceId] ?? "STARTER";
+      const periodEnd = new Date((sub.current_period_end ?? Math.floor(Date.now() / 1000) + 30 * 24 * 60 * 60) * 1000);
+
+      if (event.type === "customer.subscription.created" && orgId) {
+        const customerId =
+          typeof sub.customer === "string" ? sub.customer : (sub.customer as Stripe.Customer | null)?.id ?? `cust_${orgId}`;
+        await prisma.subscription.upsert({
+          where: { orgId },
+          create: {
+            orgId,
+            tier,
+            status: mapStatus(sub.status),
+            stripeCustomerId: customerId,
+            stripeSubscriptionId: sub.id,
+            skuAllowance: ALLOWANCE[tier],
+            currentPeriodEnd: periodEnd,
+          },
+          update: {
+            tier,
+            status: mapStatus(sub.status),
+            stripeSubscriptionId: sub.id,
+            skuAllowance: ALLOWANCE[tier],
+            currentPeriodEnd: periodEnd,
+          },
+        });
+        console.log(`[stripe-webhook] subscription.created upserted for org=${orgId}`);
+      } else {
+        await prisma.subscription.updateMany({
+          where: { stripeSubscriptionId: sub.id },
+          data: {
+            tier,
+            status: mapStatus(sub.status),
+            skuAllowance: ALLOWANCE[tier],
+            currentPeriodEnd: periodEnd,
+          },
+        });
+      }
       break;
     }
     default:
