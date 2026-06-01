@@ -20,8 +20,8 @@ const REQUIRED_SCOPES = "read_products";
 
 class RealShopifyConnector implements ShopifyConnector {
   getInstallUrl({ shop, state }: { shop: string; state: string }) {
-    const clientId = process.env.SHOPIFY_API_KEY!;
-    const redirectUri = `${process.env.NEXT_PUBLIC_APP_URL ?? "http://localhost:3000"}/api/connectors/shopify/callback`;
+    const clientId = (process.env.SHOPIFY_API_KEY ?? "").trim();
+    const redirectUri = `${(process.env.NEXT_PUBLIC_APP_URL ?? "http://localhost:3000").trim()}/api/connectors/shopify/callback`;
     return (
       `https://${shop}/admin/oauth/authorize` +
       `?client_id=${encodeURIComponent(clientId)}` +
@@ -35,8 +35,8 @@ class RealShopifyConnector implements ShopifyConnector {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
-        client_id: process.env.SHOPIFY_API_KEY,
-        client_secret: process.env.SHOPIFY_API_SECRET,
+        client_id: (process.env.SHOPIFY_API_KEY ?? "").trim(),
+        client_secret: (process.env.SHOPIFY_API_SECRET ?? "").trim(),
         code,
       }),
     });
@@ -63,7 +63,7 @@ class RealShopifyConnector implements ShopifyConnector {
     }));
   }
   verifyWebhook(rawBody: string, signature: string | null) {
-    const secret = process.env.SHOPIFY_API_SECRET;
+    const secret = (process.env.SHOPIFY_API_SECRET ?? "").trim();
     if (!secret || !signature) return false;
     const digest = crypto.createHmac("sha256", secret).update(rawBody, "utf8").digest("base64");
     try {
