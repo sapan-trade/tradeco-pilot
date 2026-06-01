@@ -48,10 +48,13 @@ class RealShopifyConnector implements ShopifyConnector {
     };
   }
   async fetchProducts({ shop, accessToken }: { shop: string; accessToken: string }) {
-    const res = await fetch(`https://${shop}/admin/api/2024-10/products.json?limit=50`, {
+    const res = await fetch(`https://${shop}/admin/api/2025-01/products.json?limit=50`, {
       headers: { "X-Shopify-Access-Token": accessToken },
     });
-    if (!res.ok) throw new Error(`Shopify products fetch failed: ${res.status}`);
+    if (!res.ok) {
+      const body = await res.text().catch(() => "");
+      throw new Error(`Shopify products fetch failed: ${res.status}${body ? ` — ${body.slice(0, 200)}` : ""}`);
+    }
     const data = (await res.json()) as { products?: Array<Record<string, any>> };
     return (data.products ?? []).map<ShopifyProductRaw>((p) => ({
       id: String(p.id),
