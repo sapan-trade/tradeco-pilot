@@ -5,16 +5,34 @@ import { prisma } from "@/lib/db";
 
 const connector = createShopifyConnector();
 
+async function resolveOrgId(req: Request): Promise<string | null> {
+  // Production: Clerk-authenticated user has an active orgId.
+  if (process.env.CLERK_SECRET_KEY) {
+    try {
+      const { auth } = await import("@clerk/nextjs/server");
+      const session = await auth();
+      if (session.orgId) return session.orgId;
+    } catch {
+      /* fall through */
+    }
+  }
+  // Test/dev fallback used by Playwright + local probes.
+  return req.headers.get("x-test-org");
+}
+
 export async function GET(req: Request) {
   const url = new URL(req.url);
   const shop = url.searchParams.get("shop");
-  const orgId = req.headers.get("x-test-org");
   if (!shop || !/^[a-z0-9-]+\.myshopify\.com$/i.test(shop)) {
     return NextResponse.json({ error: "missing or invalid `shop` parameter" }, { status: 400 });
   }
+
+  const orgId = await resolveOrgId(req);
   if (!orgId) {
-    return NextResponse.json({ error: "no org context" }, { status: 401 });
+    const appUrl = process.env.NEXT_PUBLIC_APP_URL ?? "http://localhost:3000";
+    return NextResponse.redirect(`${appUrl}/sign-in?redirect=/connectors`);
   }
+
   const state = crypto.randomBytes(16).toString("hex");
   await prisma.connector.upsert({
     where: { orgId_type: { orgId, type: "SHOPIFY" } },
