@@ -40,6 +40,7 @@ export default async function DashboardLayout({ children }: { children: React.Re
         <h2>Tenant</h2>
         <Link href="/dashboard">Overview</Link>
         <Link href="/notifications">🔔 Notifications{unread > 0 ? ` (${unread})` : ""}</Link>
+        <Link href="/analytics">Analytics</Link>
         <Link href="/skus">SKUs</Link>
         <Link href="/classifications">Classifications</Link>
         <Link href="/declarations">Declarations</Link>
@@ -68,6 +69,7 @@ export default async function DashboardLayout({ children }: { children: React.Re
         <div className="mobile-topbar">
           <Link href="/dashboard">Overview</Link>
           <Link href="/notifications">🔔{unread > 0 ? ` ${unread}` : ""}</Link>
+          <Link href="/analytics">Analytics</Link>
           <Link href="/skus">SKUs</Link>
           <Link href="/classifications">Classifications</Link>
           <Link href="/declarations">Declarations</Link>
