@@ -4,6 +4,7 @@ import {
   createFederalRegisterFetcher,
   type FederalRegisterFetcher,
 } from "@/server/integrations/federal-register";
+import { notifyCatalogMatchesForUpdate } from "@/server/services/notify";
 
 const SOURCE = "federal_register";
 const LOOKBACK_DAYS = 7;
@@ -39,6 +40,13 @@ export async function ingestRegulatoryUpdates(
         },
       });
       inserted++;
+      // Newly-ingested rule — alert any org whose catalog it touches.
+      await notifyCatalogMatchesForUpdate({
+        id: e.id,
+        title: e.title,
+        affectedHs: e.affectedHs,
+        affectedDest: e.affectedDest,
+      });
     }
   }
   return { inserted, updated };

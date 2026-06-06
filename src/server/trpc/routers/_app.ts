@@ -11,6 +11,7 @@ import { billingRouter } from "./billing";
 import { brokerPortalRouter } from "./brokerPortal";
 import { marketplaceRouter } from "./marketplace";
 import { adminBrokersRouter } from "./adminBrokers";
+import { notificationRouter } from "./notification";
 
 export const appRouter = router({
   org: orgRouter,
@@ -25,6 +26,7 @@ export const appRouter = router({
   brokerPortal: brokerPortalRouter,
   marketplace: marketplaceRouter,
   adminBrokers: adminBrokersRouter,
+  notification: notificationRouter,
 });
 
 export type AppRouter = typeof appRouter;

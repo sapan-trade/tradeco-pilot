@@ -2,6 +2,7 @@ import { z } from "zod";
 import { TRPCError } from "@trpc/server";
 import { router, requireRole } from "../init";
 import { writeAuditLog } from "@/server/services/audit";
+import { notifyOrgMembers } from "@/server/services/notify";
 
 const HS_RE = /^\d{4}\.\d{2}\.\d{4}$/;
 
@@ -117,6 +118,13 @@ export const brokerRouter = router({
           previousHsCode: r.classification.hsCode,
           newHsCode: newHs,
         },
+      });
+
+      await notifyOrgMembers(ctx.org.id, {
+        type: "BROKER_DECISION",
+        title: `A broker ${input.decision.toLowerCase()} your classification`,
+        body: `HS ${newHs} was ${input.decision.toLowerCase()} by a broker.`,
+        link: "/classifications",
       });
 
       return { ok: true as const, classificationStatus: newStatus };

@@ -17,6 +17,30 @@ model User {
   reviews       BrokerReview[] @relation("BrokerUser")
   auditEvents   AuditLog[]
   brokerProfile Broker?        @relation("BrokerProfile")
+  notifications Notification[]
+}
+
+enum NotificationType {
+  REGULATORY_ALERT
+  BROKER_DECISION
+  GENERAL
+}
+
+/// Per-user in-app notification. Email delivery is a best-effort side-effect of
+/// creation (stubbed until an email provider key is set).
+model Notification {
+  id        String           @id @default(cuid())
+  userId    String
+  orgId     String?
+  type      NotificationType
+  title     String
+  body      String
+  link      String?
+  read      Boolean          @default(false)
+  createdAt DateTime         @default(now())
+  user      User             @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId, read, createdAt])
 }
 
 /// A customer tenant. All domain data is scoped by orgId.

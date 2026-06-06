@@ -20,7 +20,10 @@ export default async function BrokerPortalLayout({ children }: { children: React
     );
   }
 
-  const me = await caller.brokerPortal.me();
+  const [me, unread] = await Promise.all([
+    caller.brokerPortal.me(),
+    caller.notification.unreadCount(),
+  ]);
 
   return (
     <div className="layout">
@@ -29,6 +32,7 @@ export default async function BrokerPortalLayout({ children }: { children: React
         {!me && <Link href="/broker/apply">Apply</Link>}
         {me && <Link href="/broker/dashboard">Dashboard</Link>}
         {me?.status === "APPROVED" && <Link href="/broker/marketplace">Marketplace</Link>}
+        <Link href="/notifications">🔔 Notifications{unread > 0 ? ` (${unread})` : ""}</Link>
         <Link href="/dashboard">← Tenant app</Link>
 
         <div style={{ marginTop: "auto", paddingTop: 24 }}>
@@ -45,6 +49,7 @@ export default async function BrokerPortalLayout({ children }: { children: React
           {!me && <Link href="/broker/apply">Apply</Link>}
           {me && <Link href="/broker/dashboard">Dashboard</Link>}
           {me?.status === "APPROVED" && <Link href="/broker/marketplace">Marketplace</Link>}
+          <Link href="/notifications">🔔{unread > 0 ? ` ${unread}` : ""}</Link>
           <Link href="/dashboard">Tenant app</Link>
         </div>
         <main className="main">{children}</main>

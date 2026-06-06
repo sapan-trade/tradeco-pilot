@@ -128,6 +128,37 @@ describe("regulatory catalog alerts", () => {
     expect(alerts.alerts[0].products[0].hsCode.startsWith("8517")).toBe(true);
   });
 
+  it("notifies orgs whose catalog a newly-ingested update affects", async () => {
+    const ts = `${Date.now()}_n`;
+    const ownerId = `u_owner_reg_${ts}`;
+    const orgId = `org_reg_${ts}`;
+    await prisma.user.create({ data: { id: ownerId, email: `${ownerId}@x.local` } });
+    await prisma.organization.create({ data: { id: orgId, name: "Acme", country: "US" } });
+    await prisma.membership.create({ data: { userId: ownerId, orgId, role: "OWNER" } });
+    const caller = appRouter.createCaller(createTestContext({ userId: ownerId, orgId, role: "OWNER" }));
+    const sku = await caller.sku.create({ title: "Smartphone Model X", imageUrls: [], currency: "USD" });
+    await caller.classification.run({ skuId: sku.id, destination: "US" });
+
+    await ingestRegulatoryUpdates(
+      fixtureFetcher([
+        {
+          id: `reg_notify_${ts}`,
+          title: "Section 301 tariff change on telephones",
+          url: "https://example.gov/z",
+          publishedAt: new Date(),
+          affectedHs: ["8517"],
+          affectedDest: ["US"],
+          severity: "WARN",
+        },
+      ])
+    );
+
+    const notes = await prisma.notification.findMany({ where: { userId: ownerId } });
+    expect(notes.length).toBe(1);
+    expect(notes[0].type).toBe("REGULATORY_ALERT");
+    expect(notes[0].read).toBe(false);
+  });
+
   it("does not flag updates for unrelated HS codes", async () => {
     const ts = `${Date.now()}_2`;
     const ownerId = `u_owner_reg_${ts}`;

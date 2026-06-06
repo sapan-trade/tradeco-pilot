@@ -2,6 +2,7 @@ import { z } from "zod";
 import { TRPCError } from "@trpc/server";
 import { router, approvedBrokerProcedure } from "../init";
 import { writeAuditLog } from "@/server/services/audit";
+import { notifyOrgMembers } from "@/server/services/notify";
 
 const HS_RE = /^\d{4}\.\d{2}\.\d{4}$/;
 
@@ -169,6 +170,13 @@ export const marketplaceRouter = router({
           newHsCode: newHs,
           brokerFeeCents: BROKER_FEE_CENTS,
         },
+      });
+
+      await notifyOrgMembers(r.classification.orgId, {
+        type: "BROKER_DECISION",
+        title: `A broker ${input.decision.toLowerCase()} your classification`,
+        body: `HS ${newHs} (${r.classification.destination}) was ${input.decision.toLowerCase()} by a licensed broker.`,
+        link: "/classifications",
       });
 
       return { ok: true as const, classificationStatus: newStatus, earnedCents: BROKER_FEE_CENTS };

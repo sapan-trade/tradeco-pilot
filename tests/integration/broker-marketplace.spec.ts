@@ -35,7 +35,7 @@ async function makeUser(prefix: string) {
 
 describe("broker marketplace", () => {
   it("apply -> approve -> onboard -> claim -> decide -> earn -> payout", async () => {
-    const { orgId, reviewId, classificationId } = await seedOrgWithReview();
+    const { ownerId, orgId, reviewId, classificationId } = await seedOrgWithReview();
     const brokerId = await makeUser("broker");
     const adminId = await makeUser("admin");
 
@@ -83,6 +83,15 @@ describe("broker marketplace", () => {
     const cls = await prisma.classification.findUniqueOrThrow({ where: { id: classificationId } });
     expect(cls.status).toBe("BROKER_APPROVED");
     expect(cls.hsCode).toBe("6109.10.0099");
+
+    // The merchant (org owner) is notified of the broker's decision.
+    const ownerCaller = appRouter.createCaller(createTestContext({ userId: ownerId, orgId, role: "OWNER" }));
+    const beforeRead = await ownerCaller.notification.unreadCount();
+    expect(beforeRead).toBeGreaterThanOrEqual(1);
+    const feed = await ownerCaller.notification.list({});
+    expect(feed.items.some((n) => n.type === "BROKER_DECISION")).toBe(true);
+    await ownerCaller.notification.markAllRead();
+    expect(await ownerCaller.notification.unreadCount()).toBe(0);
 
     // Earning accrued as PENDING.
     let me = await brokerCaller.brokerPortal.me();

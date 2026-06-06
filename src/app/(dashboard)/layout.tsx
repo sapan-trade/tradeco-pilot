@@ -7,7 +7,7 @@ import { getServerCaller } from "@/lib/server-caller";
 export const maxDuration = 60;
 
 export default async function DashboardLayout({ children }: { children: React.ReactNode }) {
-  const { ctx } = await getServerCaller();
+  const { caller, ctx } = await getServerCaller();
 
   if (!ctx.user) {
     return (
@@ -32,11 +32,14 @@ export default async function DashboardLayout({ children }: { children: React.Re
     );
   }
 
+  const unread = await caller.notification.unreadCount();
+
   return (
     <div className="layout">
       <nav className="sidebar">
         <h2>Tenant</h2>
         <Link href="/dashboard">Overview</Link>
+        <Link href="/notifications">🔔 Notifications{unread > 0 ? ` (${unread})` : ""}</Link>
         <Link href="/skus">SKUs</Link>
         <Link href="/classifications">Classifications</Link>
         <Link href="/declarations">Declarations</Link>
@@ -64,6 +67,7 @@ export default async function DashboardLayout({ children }: { children: React.Re
       <div style={{ display: "flex", flexDirection: "column", minWidth: 0 }}>
         <div className="mobile-topbar">
           <Link href="/dashboard">Overview</Link>
+          <Link href="/notifications">🔔{unread > 0 ? ` ${unread}` : ""}</Link>
           <Link href="/skus">SKUs</Link>
           <Link href="/classifications">Classifications</Link>
           <Link href="/declarations">Declarations</Link>
