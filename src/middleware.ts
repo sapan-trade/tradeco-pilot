@@ -7,7 +7,7 @@ const isPublic = createRouteMatcher([
   "/api/webhooks/(.*)",
   "/api/inngest(.*)",
   "/api/connectors/upload/put(.*)", // S3 stub PUT endpoint
-  "/api/debug/(.*)", // temporary debug routes
+  "/api/cron/(.*)", // Vercel Cron (route enforces CRON_SECRET itself)
 ]);
 
 export default clerkMiddleware(async (auth, req) => {
