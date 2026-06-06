@@ -5,8 +5,9 @@ export default async function MetricsPage() {
   if (!ctx.org) return <div className="note">Not authenticated.</div>;
 
   let m;
+  let acc;
   try {
-    m = await caller.metrics.overview();
+    [m, acc] = await Promise.all([caller.metrics.overview(), caller.metrics.accuracyDataset()]);
   } catch {
     return (
       <div className="note">
@@ -32,6 +33,7 @@ export default async function MetricsPage() {
         <div className="stat-card"><div className="stat-card-label">Approved brokers</div><div className="stat-card-value">{m.approvedBrokers}</div></div>
         <div className="stat-card"><div className="stat-card-label">Classifications</div><div className="stat-card-value">{m.classifications}</div><div className="stat-card-sub">all time</div></div>
         <div className="stat-card"><div className="stat-card-label">Declarations submitted</div><div className="stat-card-value">{m.declarationsSubmitted}</div></div>
+        <div className="stat-card"><div className="stat-card-label">AI accuracy (reviewed)</div><div className="stat-card-value">{acc.accuracyPct == null ? "—" : `${acc.accuracyPct}%`}</div><div className="stat-card-sub">{acc.decided} broker decisions</div></div>
       </div>
 
       <h2 style={{ marginTop: 28 }}>Funnel events (30d)</h2>
@@ -51,6 +53,30 @@ export default async function MetricsPage() {
             </div>
           ))}
         </div>
+      )}
+
+      <h2 style={{ marginTop: 28 }}>Correction dataset ({acc.correctionCount})</h2>
+      <p style={{ color: "var(--text-secondary)", fontSize: 14, marginTop: 4 }}>
+        Every time a broker corrected the AI — labeled <code>from → to</code> pairs. This is your eval
+        set and training signal: the data moat competitors can&apos;t copy.
+      </p>
+      {acc.corrections.length === 0 ? (
+        <div className="empty">No corrections yet.</div>
+      ) : (
+        <table style={{ maxWidth: 640 }}>
+          <thead>
+            <tr><th>AI predicted</th><th>Broker corrected to</th><th>When</th></tr>
+          </thead>
+          <tbody>
+            {acc.corrections.map((c, i) => (
+              <tr key={i}>
+                <td><code>{c.from}</code></td>
+                <td><code>{c.to}</code></td>
+                <td style={{ fontSize: 12, color: "var(--text-muted)" }}>{new Date(c.decidedAt).toLocaleDateString()}</td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
       )}
     </>
   );

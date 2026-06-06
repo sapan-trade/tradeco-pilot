@@ -137,6 +137,7 @@ export const marketplaceRouter = router({
             brokerUserId: ctx.user.id,
             claimedByUserId: ctx.user.id,
             claimedAt: r.claimedAt ?? new Date(),
+            originalHsCode: r.classification.hsCode,
             correctedHsCode: input.correctedHsCode ?? null,
             notes: input.notes ?? null,
             decidedAt: new Date(),

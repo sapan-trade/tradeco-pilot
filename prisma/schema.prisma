@@ -233,6 +233,7 @@ model BrokerReview {
   claimedByUserId  String?
   claimedAt        DateTime?
   decision         BrokerDecision?
+  originalHsCode   String?
   correctedHsCode  String?
   notes            String?
   decidedAt        DateTime?

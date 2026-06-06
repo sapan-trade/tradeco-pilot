@@ -1,6 +1,7 @@
 import { TRPCError } from "@trpc/server";
 import { router, authedProcedure } from "../init";
 import { isPlatformAdmin } from "@/server/services/telemetry";
+import { computeAccuracy } from "@/server/services/accuracy";
 
 /** Platform-wide business metrics. Gated to PLATFORM_ADMIN_EMAILS, not org admins. */
 export const metricsRouter = router({
@@ -38,6 +39,28 @@ export const metricsRouter = router({
       events: events
         .map((e) => ({ name: e.name, count: e._count._all }))
         .sort((a, b) => b.count - a.count),
+    };
+  }),
+
+  /** Platform-wide AI accuracy + the labeled correction dataset (the eval/moat data). */
+  accuracyDataset: authedProcedure.query(async ({ ctx }) => {
+    if (!(await isPlatformAdmin(ctx.user.id))) {
+      throw new TRPCError({ code: "FORBIDDEN", message: "Platform admin only" });
+    }
+    const reviews = await ctx.prisma.brokerReview.findMany({
+      where: { decision: { not: null } },
+      select: { decision: true, decidedAt: true, originalHsCode: true, correctedHsCode: true },
+    });
+    const a = computeAccuracy(reviews);
+    return {
+      accuracyPct: a.accuracyPct,
+      decided: a.decided,
+      approved: a.approved,
+      corrected: a.corrected,
+      rejected: a.rejected,
+      byMonth: a.byMonth,
+      corrections: a.corrections.slice(0, 200),
+      correctionCount: a.corrections.length,
     };
   }),
 });

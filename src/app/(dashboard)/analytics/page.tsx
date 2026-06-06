@@ -38,7 +38,7 @@ function Bar({ label, count, total, color }: { label: string; count: number; tot
 export default async function AnalyticsPage() {
   const { caller, ctx } = await getServerCaller();
   if (!ctx.org) return <div className="note">Not authenticated.</div>;
-  const a = await caller.analytics.summary();
+  const [a, acc] = await Promise.all([caller.analytics.summary(), caller.analytics.accuracy()]);
 
   const statusEntries = Object.entries(a.statusCounts).sort((x, y) => y[1] - x[1]);
   const maxChapter = Math.max(1, ...a.topChapters.map((c) => c.count));
@@ -104,6 +104,37 @@ export default async function AnalyticsPage() {
               )}
             </div>
           </div>
+
+          <h2 style={{ marginTop: 24 }}>AI accuracy (broker-reviewed)</h2>
+          <p style={{ color: "var(--text-secondary)", fontSize: 14, marginTop: 4 }}>
+            How often a licensed broker accepted the AI&apos;s code as-is on the low-confidence items
+            it flagged for review.
+          </p>
+          {acc.accuracyPct == null ? (
+            <div className="empty">No broker-reviewed decisions yet.</div>
+          ) : (
+            <>
+              <div className="stat-cards">
+                <div className="stat-card">
+                  <div className="stat-card-label">Accuracy on reviewed items</div>
+                  <div className="stat-card-value">{acc.accuracyPct}%</div>
+                  <div className="stat-card-sub">{acc.approved} approved · {acc.corrected} corrected</div>
+                </div>
+                <div className="stat-card">
+                  <div className="stat-card-label">Broker decisions</div>
+                  <div className="stat-card-value">{acc.decided}</div>
+                  <div className="stat-card-sub">{acc.rejected} rejected (insufficient info)</div>
+                </div>
+              </div>
+              {acc.byMonth.length > 0 && (
+                <div style={{ maxWidth: 520, marginTop: 12 }}>
+                  {acc.byMonth.map((m) => (
+                    <Bar key={m.month} label={m.month} count={m.accuracyPct} total={100} color="#10b981" />
+                  ))}
+                </div>
+              )}
+            </>
+          )}
 
           <h2 style={{ marginTop: 24 }}>Declarations</h2>
           <div className="stat-cards">

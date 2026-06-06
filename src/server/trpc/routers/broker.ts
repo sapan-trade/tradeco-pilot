@@ -95,6 +95,7 @@ export const brokerRouter = router({
           data: {
             decision: input.decision,
             brokerUserId: ctx.user.id,
+            originalHsCode: r.classification.hsCode,
             correctedHsCode: input.correctedHsCode ?? null,
             notes: input.notes ?? null,
             decidedAt: new Date(),
