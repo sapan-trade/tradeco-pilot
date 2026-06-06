@@ -13,11 +13,12 @@ export default async function DashboardHome() {
     );
   }
 
-  const [skus, classifications, declarations, billing] = await Promise.all([
+  const [skus, classifications, declarations, billing, alerts] = await Promise.all([
     caller.sku.list({}),
     caller.classification.list({}),
     caller.declaration.list({}),
     caller.billing.subscription(),
+    caller.regulatory.alertsForOrg(),
   ]);
 
   const needsReview = classifications.items.filter((c) => c.status === "NEEDS_REVIEW").length;
@@ -30,6 +31,16 @@ export default async function DashboardHome() {
         Org <code>{ctx.org.id.slice(0, 16)}…</code> · role <strong>{ctx.org.role}</strong> ·
         {" "}plan <strong>{billing.tier ?? "None"}</strong>
       </p>
+
+      {alerts.alertCount > 0 && (
+        <div className="banner banner-error" style={{ display: "flex", justifyContent: "space-between", alignItems: "center", gap: 12 }}>
+          <span>
+            ⚠ {alerts.alertCount} regulatory change(s) affect {alerts.affectedSkuCount} of your
+            products.
+          </span>
+          <Link href="/regulatory" className="btn-secondary" style={{ padding: "6px 12px" }}>Review alerts</Link>
+        </div>
+      )}
 
       <DashboardStats
         stats={[

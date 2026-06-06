@@ -1,9 +1,13 @@
 import { describe, it, expect } from "vitest";
 import { ingestRegulatoryUpdates } from "@/inngest/functions/ingest-regulatory";
-import type {
-  FederalRegisterFetcher,
-  FederalRegisterEntry,
+import {
+  extractHsCodes,
+  inferSeverity,
+  type FederalRegisterFetcher,
+  type FederalRegisterEntry,
 } from "@/server/integrations/federal-register";
+import { appRouter } from "@/server/trpc/routers/_app";
+import { createTestContext } from "@/server/trpc/context";
 import { prisma } from "@/lib/db";
 
 function fixtureFetcher(entries: FederalRegisterEntry[]): FederalRegisterFetcher {
@@ -73,5 +77,80 @@ describe("regulatory ingest", () => {
       where: { source: "federal_register", externalId: "2027-12345" },
     });
     expect(row.title).toBe("REVISED: Section 301 Tariff Modification");
+  });
+});
+
+describe("regulatory feed extraction", () => {
+  it("extracts dotted HS codes and ignores bare years", () => {
+    const codes = extractHsCodes("In 2027, subheading 8517.62 and 6109.10.0010 are modified.");
+    expect(codes).toContain("8517.62");
+    expect(codes).toContain("6109.10.0010");
+    expect(codes).not.toContain("2027");
+  });
+
+  it("infers severity from document language", () => {
+    expect(inferSeverity("Prohibition on imports of X")).toBe("CRITICAL");
+    expect(inferSeverity("Modification of Section 301 tariffs")).toBe("WARN");
+    expect(inferSeverity("Notice of public meeting")).toBe("INFO");
+  });
+});
+
+describe("regulatory catalog alerts", () => {
+  it("flags updates whose HS code prefixes a product the org classified", async () => {
+    const ts = `${Date.now()}`;
+    const ownerId = `u_owner_reg_${ts}`;
+    const orgId = `org_reg_${ts}`;
+    await prisma.user.create({ data: { id: ownerId, email: `${ownerId}@x.local` } });
+    await prisma.organization.create({ data: { id: orgId, name: "Acme", country: "US" } });
+    await prisma.membership.create({ data: { userId: ownerId, orgId, role: "OWNER" } });
+
+    const caller = appRouter.createCaller(createTestContext({ userId: ownerId, orgId, role: "OWNER" }));
+    const sku = await caller.sku.create({ title: "Smartphone Model X", imageUrls: [], currency: "USD" });
+    await caller.classification.run({ skuId: sku.id, destination: "US" });
+    // Stub classifies this to an 8517.* code; the update affects heading 8517.
+    await prisma.regulatoryUpdate.create({
+      data: {
+        source: "federal_register",
+        externalId: `reg_${ts}`,
+        title: "Section 301 tariff change on telephones",
+        url: "https://example.gov/x",
+        severity: "WARN",
+        affectedHs: ["8517"],
+        affectedDest: ["US"],
+        publishedAt: new Date(),
+      },
+    });
+
+    const alerts = await caller.regulatory.alertsForOrg();
+    expect(alerts.alertCount).toBe(1);
+    expect(alerts.affectedSkuCount).toBe(1);
+    expect(alerts.alerts[0].products[0].skuId).toBe(sku.id);
+    expect(alerts.alerts[0].products[0].hsCode.startsWith("8517")).toBe(true);
+  });
+
+  it("does not flag updates for unrelated HS codes", async () => {
+    const ts = `${Date.now()}_2`;
+    const ownerId = `u_owner_reg_${ts}`;
+    const orgId = `org_reg_${ts}`;
+    await prisma.user.create({ data: { id: ownerId, email: `${ownerId}@x.local` } });
+    await prisma.organization.create({ data: { id: orgId, name: "Acme", country: "US" } });
+    await prisma.membership.create({ data: { userId: ownerId, orgId, role: "OWNER" } });
+    const caller = appRouter.createCaller(createTestContext({ userId: ownerId, orgId, role: "OWNER" }));
+    const sku = await caller.sku.create({ title: "Smartphone Model X", imageUrls: [], currency: "USD" });
+    await caller.classification.run({ skuId: sku.id, destination: "US" });
+    await prisma.regulatoryUpdate.create({
+      data: {
+        source: "federal_register",
+        externalId: `reg_${ts}`,
+        title: "Rule on cotton apparel",
+        url: "https://example.gov/y",
+        severity: "INFO",
+        affectedHs: ["6109"],
+        affectedDest: ["US"],
+        publishedAt: new Date(),
+      },
+    });
+    const alerts = await caller.regulatory.alertsForOrg();
+    expect(alerts.alertCount).toBe(0);
   });
 });
