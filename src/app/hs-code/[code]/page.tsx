@@ -13,7 +13,7 @@ export async function generateMetadata({ params }: { params: Promise<{ code: str
   if (!entry) return { title: "HS code not found" };
   return {
     title: `HS Code ${entry.hs} — ${entry.title} | US duty ${(entry.dutyRateBps / 100).toFixed(2)}%`,
-    description: `${entry.hs}: ${entry.title}. Chapter ${entry.chapter}, US import duty rate ${(entry.dutyRateBps / 100).toFixed(2)}%. Classify your product free with TradeCo-Pilot.`,
+    description: `${entry.hs}: ${entry.title}. Chapter ${entry.chapter}, US import duty rate ${(entry.dutyRateBps / 100).toFixed(2)}%. Classify your product free with Clearwise.`,
   };
 }
 

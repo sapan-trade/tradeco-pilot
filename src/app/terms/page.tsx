@@ -2,21 +2,21 @@ import Link from "next/link";
 import type { Metadata } from "next";
 
 export const metadata: Metadata = {
-  title: "Terms of Service | TradeCo-Pilot",
-  description: "Terms of Service for TradeCo-Pilot, including classification advisory disclaimers.",
+  title: "Terms of Service | Clearwise",
+  description: "Terms of Service for Clearwise, including classification advisory disclaimers.",
 };
 
 // NOTE: Template only — must be reviewed by qualified legal counsel before relying on it.
 export default function TermsPage() {
   return (
     <div className="container" style={{ maxWidth: 760, padding: "48px 24px", lineHeight: 1.7 }}>
-      <p><Link href="/">← TradeCo-Pilot</Link></p>
+      <p><Link href="/">← Clearwise</Link></p>
       <h1>Terms of Service</h1>
       <p style={{ color: "var(--text-muted)" }}>Last updated: June 2026</p>
 
       <h2>1. Advisory nature of classifications</h2>
       <p>
-        TradeCo-Pilot provides AI-generated HS/HTS tariff code suggestions, landed-cost estimates,
+        Clearwise provides AI-generated HS/HTS tariff code suggestions, landed-cost estimates,
         and related information. <strong>These are advisory only and do not constitute legal,
         customs, tax, or professional advice.</strong> Tariff classification depends on facts
         (materials, construction, intended use, origin) that only you can fully determine.
@@ -33,7 +33,7 @@ export default function TermsPage() {
       <h2>3. Broker review</h2>
       <p>
         Where a classification is reviewed by a licensed broker through the platform, that review
-        reflects the broker&apos;s professional judgment. TradeCo-Pilot facilitates the connection
+        reflects the broker&apos;s professional judgment. Clearwise facilitates the connection
         and does not itself act as your customs broker or licensed representative.
       </p>
 
@@ -46,7 +46,7 @@ export default function TermsPage() {
 
       <h2>5. Limitation of liability</h2>
       <p>
-        To the maximum extent permitted by law, TradeCo-Pilot and its suppliers are not liable for
+        To the maximum extent permitted by law, Clearwise and its suppliers are not liable for
         any indirect, incidental, special, or consequential damages, or for duties, penalties, fines,
         seizures, delays, or losses arising from the use of, or reliance on, the service. Our
         aggregate liability is limited to the fees you paid in the 12 months preceding the claim.

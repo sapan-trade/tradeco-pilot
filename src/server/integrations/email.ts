@@ -38,7 +38,7 @@ let cached: EmailClient | null = null;
 export function createEmailClient(): EmailClient {
   if (cached) return cached;
   const key = process.env.RESEND_API_KEY;
-  const from = process.env.EMAIL_FROM ?? "TradeCo-Pilot <alerts@tradeco.local>";
+  const from = process.env.EMAIL_FROM ?? "Clearwise <alerts@clearwise.app>";
   const useReal = key && process.env.NODE_ENV !== "test";
   cached = useReal ? new ResendEmailClient(key!, from) : new StubEmailClient();
   return cached;

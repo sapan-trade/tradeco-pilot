@@ -39,7 +39,7 @@ export default async function ApiSettingsPage() {
     <>
       <h1>API keys</h1>
       <p style={{ color: "var(--text-secondary)" }}>
-        Integrate TradeCo-Pilot into your own systems — classify products programmatically.
+        Integrate Clearwise into your own systems — classify products programmatically.
       </p>
 
       <h2 style={{ marginTop: 16 }}>Create a key</h2>

@@ -9,9 +9,9 @@ const inter = Inter({
 });
 
 export const metadata = {
-  title: "TradeCo-Pilot — AI customs classifier for SMBs",
+  title: "Clearwise — Tariff codes you can defend",
   description:
-    "Classify any product to a 10-digit HS code in 60 seconds. Confidence-scored, reasoning shown, audit-defensible. Built for SMB importers and exporters.",
+    "Broker-verified HS tariff classification for importers and exporters. AI-fast, human-checked, audit-defensible — so your codes hold up at the border.",
 };
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {

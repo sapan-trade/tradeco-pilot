@@ -3,6 +3,8 @@ import { CreateOrganization, OrganizationSwitcher, UserButton } from "@clerk/nex
 import { getServerCaller } from "@/lib/server-caller";
 import { SideNav } from "@/components/SideNav";
 import { MobileNav } from "@/components/MobileNav";
+import { BrandMark } from "@/components/BrandMark";
+import { BRAND } from "@/lib/brand";
 
 // Server actions on the dashboard (Classify, Submit, etc.) call Claude which
 // can take 5-15s. Hobby plan default is 10s; bump per-route to 60s.
@@ -40,8 +42,8 @@ export default async function DashboardLayout({ children }: { children: React.Re
     <div className="layout">
       <nav className="sidebar">
         <div className="sidebar-brand">
-          <span className="mark">TC</span>
-          <span>TradeCo-Pilot</span>
+          <BrandMark size={28} />
+          <span>{BRAND.name}</span>
         </div>
         <h2>Tenant</h2>
         <SideNav

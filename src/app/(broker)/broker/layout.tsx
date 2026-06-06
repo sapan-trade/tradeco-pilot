@@ -4,6 +4,7 @@ import { getServerCaller } from "@/lib/server-caller";
 import { StatusPill } from "@/components/StatusPill";
 import { SideNav, type NavItem } from "@/components/SideNav";
 import { MobileNav } from "@/components/MobileNav";
+import { BrandMark } from "@/components/BrandMark";
 
 /**
  * Broker-portal chrome. Platform-level (NOT org-scoped) — an independent broker may
@@ -40,7 +41,7 @@ export default async function BrokerPortalLayout({ children }: { children: React
     <div className="layout">
       <nav className="sidebar">
         <div className="sidebar-brand">
-          <span className="mark">TC</span>
+          <BrandMark size={28} />
           <span>Broker portal</span>
         </div>
         <SideNav items={brokerItems} />

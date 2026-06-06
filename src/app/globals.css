@@ -1,10 +1,11 @@
 /* ----- DESIGN TOKENS ----- */
 :root {
-  --primary: #4f46e5;
-  --primary-dark: #3730a3;
-  --primary-light: #818cf8;
-  --primary-50: #eef2ff;
-  --primary-100: #e0e7ff;
+  /* Clearwise brand — clearance teal (ownable; not the default SaaS indigo) */
+  --primary: #0f766e;
+  --primary-dark: #115e59;
+  --primary-light: #5eead4;
+  --primary-50: #f0fdfa;
+  --primary-100: #ccfbf1;
   --accent: #f59e0b;
   --success: #10b981;
   --success-light: #d1fae5;

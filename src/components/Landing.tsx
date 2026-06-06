@@ -3,10 +3,12 @@ import Link from "next/link";
 import { motion, useInView, useMotionValue, useTransform, animate } from "framer-motion";
 import { useEffect, useRef, useState } from "react";
 import {
-  Boxes, ShieldCheck, Sparkles, Zap, FileCheck, BarChart3,
+  ShieldCheck, Zap, FileCheck, BarChart3,
   ArrowRight, Check, Globe2, DollarSign, Clock, Brain, Workflow,
   Upload, ScanLine, UserCheck, Send, AlertTriangle, TrendingUp,
 } from "lucide-react";
+import { BrandMark } from "@/components/BrandMark";
+import { BRAND } from "@/lib/brand";
 
 const fadeUp = {
   hidden: { opacity: 0, y: 24 },
@@ -36,8 +38,8 @@ function Nav({ signedIn }: { signedIn: boolean }) {
   return (
     <nav className="landing-nav">
       <Link href="/" className="landing-logo">
-        <span className="landing-logo-mark"><Boxes size={18} /></span>
-        TradeCo-Pilot
+        <BrandMark size={28} />
+        {BRAND.name}
       </Link>
       <div className="landing-nav-links">
         <a href="#why">Why</a>
@@ -65,16 +67,16 @@ function Hero({ signedIn }: { signedIn: boolean }) {
       <div className="container hero-grid">
         <motion.div initial="hidden" animate="visible" variants={stagger}>
           <motion.div variants={fadeUp} className="section-tag">
-            <Sparkles size={12} style={{ display: "inline", marginRight: 6, verticalAlign: "-1px" }} />
-            AI customs classifier · audit-defensible
+            <ShieldCheck size={12} style={{ display: "inline", marginRight: 6, verticalAlign: "-1px" }} />
+            Broker-verified · audit-defensible
           </motion.div>
           <motion.h1 variants={fadeUp}>
-            Stop guessing HS codes.<br /><span className="accent">Start saving thousands.</span>
+            Tariff codes you can <span className="accent">defend.</span>
           </motion.h1>
           <motion.p variants={fadeUp} className="hero-sub">
-            TradeCo-Pilot classifies any product to a 10-digit harmonized tariff code in 60 seconds.
-            Confidence-scored, reasoning shown, and routed to a licensed broker when the model isn't sure —
-            so your declarations stand up to a CBP audit.
+            Clearwise classifies any product to a 10-digit HS code in seconds — confidence-scored,
+            reasoning shown, and signed off by a licensed customs broker when it counts. So when CBP
+            asks, your codes hold up.
           </motion.p>
           <motion.div variants={fadeUp} className="hero-cta">
             <Link href={signedIn ? "/dashboard" : "/sign-up"} className="btn-primary btn-large">
@@ -488,8 +490,8 @@ function Footer() {
   return (
     <footer className="landing-footer">
       <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
-        <span className="landing-logo-mark" style={{ width: 24, height: 24 }}><Boxes size={14} /></span>
-        <span>© 2026 TradeCo-Pilot</span>
+        <BrandMark size={22} />
+        <span>© 2026 {BRAND.name} · {BRAND.tagline}</span>
       </div>
       <div style={{ display: "flex", gap: 24 }}>
         <Link href="/lookup">Free HS lookup</Link>

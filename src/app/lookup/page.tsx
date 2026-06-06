@@ -8,7 +8,7 @@ import { track } from "@/server/services/telemetry";
 import { Disclaimer } from "@/components/Disclaimer";
 
 export const metadata: Metadata = {
-  title: "Free HS Code Lookup — AI tariff classification | TradeCo-Pilot",
+  title: "Free HS Code Lookup — AI tariff classification | Clearwise",
   description:
     "Find the HS / HTS tariff code for any product in seconds with AI. Free, no signup. See the code, confidence, and US import duty rate.",
 };
@@ -53,7 +53,7 @@ export default async function LookupPage({
 
   return (
     <div className="container" style={{ maxWidth: 720, padding: "48px 24px" }}>
-      <p><Link href="/">← TradeCo-Pilot</Link></p>
+      <p><Link href="/">← Clearwise</Link></p>
       <span className="section-tag">Free tool</span>
       <h1 style={{ fontSize: 36, marginBottom: 8 }}>HS Code Lookup</h1>
       <p style={{ color: "var(--text-secondary)", fontSize: 17, marginBottom: 24 }}>
@@ -102,7 +102,7 @@ export default async function LookupPage({
       )}
 
       <div className="feature-card" style={{ background: "var(--primary-50)", borderColor: "var(--primary-100)" }}>
-        <strong>Why TradeCo-Pilot?</strong>
+        <strong>Why Clearwise?</strong>
         <ul style={{ margin: "8px 0 0", paddingLeft: 18, color: "var(--text-secondary)", fontSize: 14, lineHeight: 1.7 }}>
           <li>AI codes reviewed by <strong>licensed customs brokers</strong></li>
           <li>Landed-cost estimates (duty, VAT, freight, fees)</li>

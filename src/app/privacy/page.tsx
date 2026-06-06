@@ -2,15 +2,15 @@ import Link from "next/link";
 import type { Metadata } from "next";
 
 export const metadata: Metadata = {
-  title: "Privacy Policy | TradeCo-Pilot",
-  description: "How TradeCo-Pilot collects, uses, and protects your data.",
+  title: "Privacy Policy | Clearwise",
+  description: "How Clearwise collects, uses, and protects your data.",
 };
 
 // NOTE: Template only — must be reviewed by qualified legal counsel before relying on it.
 export default function PrivacyPage() {
   return (
     <div className="container" style={{ maxWidth: 760, padding: "48px 24px", lineHeight: 1.7 }}>
-      <p><Link href="/">← TradeCo-Pilot</Link></p>
+      <p><Link href="/">← Clearwise</Link></p>
       <h1>Privacy Policy</h1>
       <p style={{ color: "var(--text-muted)" }}>Last updated: June 2026</p>
 
