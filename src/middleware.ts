@@ -14,6 +14,7 @@ const isPublic = createRouteMatcher([
   "/api/inngest(.*)",
   "/api/connectors/upload/put(.*)", // S3 stub PUT endpoint
   "/api/cron/(.*)", // Vercel Cron (route enforces CRON_SECRET itself)
+  "/api/v1/(.*)", // public REST API (authenticates via API key)
 ]);
 
 export default clerkMiddleware(async (auth, req) => {

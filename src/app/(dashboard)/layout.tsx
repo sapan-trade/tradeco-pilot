@@ -56,6 +56,7 @@ export default async function DashboardLayout({ children }: { children: React.Re
             { href: "/regulatory", label: "Regulatory", icon: "Scale" },
             { href: "/audit", label: "Audit log", icon: "ClipboardList" },
             { href: "/settings/billing", label: "Billing", icon: "CreditCard" },
+            { href: "/settings/api", label: "API keys", icon: "KeyRound" },
           ]}
         />
         <h2 style={{ marginTop: 20 }}>Broker</h2>

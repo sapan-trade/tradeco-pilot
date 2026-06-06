@@ -16,6 +16,7 @@ import {
   Inbox,
   Store,
   ClipboardList,
+  KeyRound,
   type LucideIcon,
 } from "lucide-react";
 
@@ -33,6 +34,7 @@ const ICON: Record<string, LucideIcon> = {
   Inbox,
   Store,
   ClipboardList,
+  KeyRound,
 };
 
 export interface NavItem {

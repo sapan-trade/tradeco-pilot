@@ -4,6 +4,7 @@ import { resetObjectStoreForTests } from "@/server/integrations/s3";
 import { resetRateLimiterForTests } from "@/server/integrations/ratelimit";
 
 const TABLES = [
+  "ApiKey",
   "UsageRecord",
   "AnalyticsEvent",
   "Notification",
