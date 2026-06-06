@@ -93,6 +93,26 @@ describe("declaration lifecycle", () => {
     await expect(caller.declaration.submit({ id: d.id })).rejects.toThrow(/Cannot submit/);
   });
 
+  it("refuses to draft a declaration from a classification that isn't approved", async () => {
+    seq++;
+    const ts = `${Date.now()}_${seq}`;
+    const userId = `u_${ts}`;
+    const orgId = `org_${ts}`;
+    await prisma.user.create({ data: { id: userId, email: `${userId}@x.local` } });
+    // High threshold forces NEEDS_REVIEW so the classification stays unapproved.
+    await prisma.organization.create({
+      data: { id: orgId, name: "Acme", country: "US", settings: { confidenceThreshold: 0.999 } },
+    });
+    await prisma.membership.create({ data: { userId, orgId, role: "OWNER" } });
+    const caller = appRouter.createCaller(createTestContext({ userId, orgId, role: "OWNER" }));
+    const sku = await caller.sku.create({ title: "Ceramic mug", imageUrls: [], currency: "USD" });
+    const cls = await caller.classification.run({ skuId: sku.id, destination: "US" });
+    expect(cls.status).toBe("NEEDS_REVIEW");
+    await expect(
+      caller.declaration.create({ classificationId: cls.classificationId })
+    ).rejects.toThrow(/Cannot draft/);
+  });
+
   it("rejects access to a declaration owned by another org", async () => {
     const a = await seedOrgAndUser();
     const b = await seedOrgAndUser();

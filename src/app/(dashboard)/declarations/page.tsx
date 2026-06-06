@@ -60,7 +60,7 @@ export default async function DeclarationsPage({
           <tbody>
             {items.map((d) => (
               <tr key={d.id}>
-                <td>{d.shipmentRef ?? <code style={{ fontSize: 12 }}>{d.id.slice(0, 8)}</code>}</td>
+                <td><Link href={`/declarations/${d.id}`}>{d.shipmentRef ?? <code style={{ fontSize: 12 }}>{d.id.slice(0, 8)}</code>}</Link></td>
                 <td>{d.destination}</td>
                 <td><StatusPill status={d.status} /></td>
                 <td>{d.totalDutyCents != null ? `$${(d.totalDutyCents / 100).toFixed(2)}` : "—"}</td>

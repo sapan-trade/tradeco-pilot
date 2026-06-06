@@ -33,6 +33,9 @@ export const declarationRouter = router({
         return toDto(d);
       } catch (e: any) {
         if (e.message === "Classification not found") throw new TRPCError({ code: "NOT_FOUND", message: e.message });
+        if (typeof e.message === "string" && e.message.startsWith("Cannot draft")) {
+          throw new TRPCError({ code: "PRECONDITION_FAILED", message: e.message });
+        }
         throw e;
       }
     }),

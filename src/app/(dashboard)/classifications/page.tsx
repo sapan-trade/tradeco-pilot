@@ -35,6 +35,7 @@ export default async function ClassificationsPage({
 
   const classifiedReview = sp.ok === "classified" && sp.status === "NEEDS_REVIEW";
   const classifiedAuto = sp.ok === "classified" && sp.status === "AUTO_APPROVED";
+  const DRAFTABLE = new Set(["AUTO_APPROVED", "BROKER_APPROVED", "OVERRIDDEN"]);
 
   return (
     <>
@@ -83,10 +84,20 @@ export default async function ClassificationsPage({
                 <td style={{ fontSize: 12, color: "#6b7280" }}>{new Date(c.createdAt).toLocaleString()}</td>
                 <td>
                   <Link href={`/skus/${c.skuId}`}>SKU</Link>{" · "}
-                  <form action={estimateAndDraft} className="inline">
-                    <input type="hidden" name="classificationId" value={c.id} />
-                    <SubmitButton className="ghost" pendingText="Drafting…">Draft declaration</SubmitButton>
-                  </form>
+                  {DRAFTABLE.has(c.status) ? (
+                    <form action={estimateAndDraft} className="inline">
+                      <input type="hidden" name="classificationId" value={c.id} />
+                      <SubmitButton className="ghost" pendingText="Drafting…">Draft declaration</SubmitButton>
+                    </form>
+                  ) : (
+                    <span style={{ fontSize: 12, color: "var(--text-muted)" }} title="Only approved classifications can be filed">
+                      {c.status === "NEEDS_REVIEW"
+                        ? "awaiting broker review"
+                        : c.status === "BROKER_REJECTED"
+                        ? "rejected — can't file"
+                        : "not ready"}
+                    </span>
+                  )}
                 </td>
               </tr>
             ))}

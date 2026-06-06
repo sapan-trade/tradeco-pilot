@@ -4,6 +4,10 @@ import { createStripeClient } from "@/server/integrations/stripe";
 
 const stripe = createStripeClient();
 
+// Only verified classifications may become a customs filing. Drafting off a
+// PENDING / NEEDS_REVIEW / BROKER_REJECTED code would file unvetted paperwork.
+export const DRAFTABLE_STATUSES = new Set(["AUTO_APPROVED", "BROKER_APPROVED", "OVERRIDDEN"]);
+
 export async function createDeclaration(input: {
   orgId: string;
   userId: string;
@@ -15,6 +19,9 @@ export async function createDeclaration(input: {
     include: { sku: true, estimates: { orderBy: { computedAt: "desc" }, take: 1 } },
   });
   if (!c) throw new Error("Classification not found");
+  if (!DRAFTABLE_STATUSES.has(c.status)) {
+    throw new Error(`Cannot draft: classification is ${c.status} — it must be approved first`);
+  }
 
   const latestEstimate = c.estimates[0] ?? null;
   const packageJson = {
