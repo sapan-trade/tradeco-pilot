@@ -1,5 +1,6 @@
 import { z } from "zod";
 import { router, orgProcedure, requireRole } from "../init";
+import { seedSampleData } from "@/server/services/sample-data";
 
 const DEFAULT_THRESHOLD = 0.85;
 
@@ -35,4 +36,8 @@ export const orgRouter = router({
       });
       return { ok: true as const };
     }),
+
+  loadSampleData: orgProcedure.mutation(async ({ ctx }) => {
+    return seedSampleData(ctx.org.id);
+  }),
 });

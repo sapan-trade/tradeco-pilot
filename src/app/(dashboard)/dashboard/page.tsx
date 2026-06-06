@@ -1,6 +1,8 @@
 import Link from "next/link";
+import { revalidatePath } from "next/cache";
 import { getServerCaller } from "@/lib/server-caller";
 import { DashboardStats } from "@/components/DashboardStats";
+import { SubmitButton } from "@/components/SubmitButton";
 
 export default async function DashboardHome() {
   const { caller, ctx } = await getServerCaller();
@@ -23,6 +25,17 @@ export default async function DashboardHome() {
 
   const needsReview = classifications.items.filter((c) => c.status === "NEEDS_REVIEW").length;
   const submitted = declarations.items.filter((d) => d.status === "SUBMITTED").length;
+  const isEmpty = skus.items.length === 0;
+
+  async function loadSamples() {
+    "use server";
+    const { caller } = await getServerCaller();
+    await caller.org.loadSampleData();
+    revalidatePath("/dashboard");
+    revalidatePath("/skus");
+    revalidatePath("/classifications");
+    revalidatePath("/analytics");
+  }
 
   return (
     <>
@@ -31,6 +44,24 @@ export default async function DashboardHome() {
         Org <code>{ctx.org.id.slice(0, 16)}…</code> · role <strong>{ctx.org.role}</strong> ·
         {" "}plan <strong>{billing.tier ?? "None"}</strong>
       </p>
+
+      {isEmpty && (
+        <div
+          className="feature-card"
+          style={{ margin: "16px 0", background: "var(--primary-50)", borderColor: "var(--primary-100)", display: "flex", justifyContent: "space-between", alignItems: "center", gap: 16, flexWrap: "wrap" }}
+        >
+          <div>
+            <strong>👋 New here? See it in action.</strong>
+            <div style={{ fontSize: 14, color: "var(--text-secondary)", marginTop: 4 }}>
+              Load a few sample products — already classified, with landed-cost estimates — to explore
+              the workflow. Or <Link href="/skus">add your own</Link> / <Link href="/connectors">import from Shopify</Link>.
+            </div>
+          </div>
+          <form action={loadSamples} className="inline">
+            <SubmitButton pendingText="Loading…">Load sample products</SubmitButton>
+          </form>
+        </div>
+      )}
 
       {alerts.alertCount > 0 && (
         <div className="banner banner-error" style={{ display: "flex", justifyContent: "space-between", alignItems: "center", gap: 12 }}>
