@@ -13,10 +13,37 @@ export interface ShopifyConnector {
   getInstallUrl(args: { shop: string; state: string }): string;
   exchangeCode(args: { shop: string; code: string }): Promise<{ accessToken: string; scopes: string[] }>;
   fetchProducts(args: { shop: string; accessToken: string }): Promise<ShopifyProductRaw[]>;
+  fetchShopInfo(args: { shop: string; accessToken: string }): Promise<{ email: string | null; name: string | null }>;
   verifyWebhook(rawBody: string, signature: string | null): boolean;
 }
 
 const REQUIRED_SCOPES = "read_products";
+
+/**
+ * Coerce loose user input into a canonical `<handle>.myshopify.com`, or return
+ * null if it can't be. Lets merchants paste almost anything instead of having to
+ * remember the exact `store.myshopify.com` form:
+ *   "mystore"                              -> mystore.myshopify.com
+ *   "MyStore.myshopify.com/"               -> mystore.myshopify.com
+ *   "https://mystore.myshopify.com/admin"  -> mystore.myshopify.com
+ *   "admin.shopify.com/store/mystore"      -> mystore.myshopify.com
+ */
+export function normalizeShopDomain(input: string): string | null {
+  let s = (input ?? "").trim().toLowerCase();
+  if (!s) return null;
+  s = s.replace(/^https?:\/\//, "");
+  // New-style admin URL: admin.shopify.com/store/<handle>
+  const adminMatch = s.match(/^admin\.shopify\.com\/store\/([a-z0-9][a-z0-9-]*)/);
+  if (adminMatch) return `${adminMatch[1]}.myshopify.com`;
+  // Drop any path, query string, or port.
+  s = s.split("/")[0].split("?")[0].split(":")[0];
+  if (!s) return null;
+  // Bare handle with no dot -> assume a myshopify store.
+  if (!s.includes(".")) {
+    return /^[a-z0-9][a-z0-9-]*$/.test(s) ? `${s}.myshopify.com` : null;
+  }
+  return /^[a-z0-9][a-z0-9-]*\.myshopify\.com$/.test(s) ? s : null;
+}
 
 class RealShopifyConnector implements ShopifyConnector {
   getInstallUrl({ shop, state }: { shop: string; state: string }) {
@@ -64,6 +91,17 @@ class RealShopifyConnector implements ShopifyConnector {
       vendor: p.vendor ?? null,
       productType: p.product_type ?? null,
     }));
+  }
+  async fetchShopInfo({ shop, accessToken }: { shop: string; accessToken: string }) {
+    const res = await fetch(`https://${shop}/admin/api/2025-01/shop.json`, {
+      headers: { "X-Shopify-Access-Token": accessToken },
+    });
+    if (!res.ok) return { email: null, name: null };
+    const data = (await res.json()) as { shop?: { email?: string; name?: string } };
+    return {
+      email: data.shop?.email?.trim().toLowerCase() ?? null,
+      name: data.shop?.name ?? null,
+    };
   }
   verifyWebhook(rawBody: string, signature: string | null) {
     const secret = (process.env.SHOPIFY_API_SECRET ?? "").trim();
@@ -114,6 +152,10 @@ class StubShopifyConnector implements ShopifyConnector {
         productType: "Electronics",
       },
     ];
+  }
+  async fetchShopInfo({ shop }: { shop: string; accessToken: string }) {
+    const handle = shop.replace(".myshopify.com", "");
+    return { email: `owner@${handle}.example`, name: "Stub Store" };
   }
   verifyWebhook(_rawBody: string, _signature: string | null) {
     return true;

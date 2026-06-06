@@ -21,9 +21,22 @@ export async function GET(req: Request) {
   }
   try {
     const { accessToken, scopes } = await connector.exchangeCode({ shop, code });
+    // Pull the store-owner email so the connection self-identifies and can be
+    // matched against the TradeCo account that initiated it.
+    const shopInfo = await connector.fetchShopInfo({ shop, accessToken }).catch(() => ({
+      email: null,
+      name: null,
+    }));
     await prisma.connector.update({
       where: { id: pending.id },
-      data: { status: "ACTIVE", accessToken, scopes, errorMessage: null },
+      data: {
+        status: "ACTIVE",
+        accessToken,
+        scopes,
+        shopEmail: shopInfo.email,
+        shopName: shopInfo.name,
+        errorMessage: null,
+      },
     });
     const { upserted } = await syncShopifyProductsToSkus({
       orgId: pending.orgId,
@@ -41,7 +54,7 @@ export async function GET(req: Request) {
       userId: null,
       action: "connector.shopify.connected",
       subject: `connector:${pending.id}`,
-      payload: { shop, productsSynced: upserted },
+      payload: { shop, shopEmail: shopInfo.email, productsSynced: upserted },
     });
     const appUrl = process.env.NEXT_PUBLIC_APP_URL ?? "http://localhost:3000";
     return NextResponse.redirect(`${appUrl}/connectors?connected=1&synced=${upserted}`);

@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
 import crypto from "node:crypto";
-import { createShopifyConnector } from "@/server/integrations/shopify";
+import { createShopifyConnector, normalizeShopDomain } from "@/server/integrations/shopify";
 import { prisma } from "@/lib/db";
 
 const connector = createShopifyConnector();
@@ -22,8 +22,8 @@ async function resolveOrgId(req: Request): Promise<string | null> {
 
 export async function GET(req: Request) {
   const url = new URL(req.url);
-  const shop = url.searchParams.get("shop");
-  if (!shop || !/^[a-z0-9-]+\.myshopify\.com$/i.test(shop)) {
+  const shop = normalizeShopDomain(url.searchParams.get("shop") ?? "");
+  if (!shop) {
     return NextResponse.json({ error: "missing or invalid `shop` parameter" }, { status: 400 });
   }
 

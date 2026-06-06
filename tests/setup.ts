@@ -6,6 +6,8 @@ import { resetRateLimiterForTests } from "@/server/integrations/ratelimit";
 const TABLES = [
   "AuditLog",
   "LandedCostEstimate",
+  "BrokerEarning",
+  "Broker",
   "BrokerReview",
   "Declaration",
   "Classification",

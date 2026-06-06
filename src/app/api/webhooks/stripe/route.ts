@@ -156,6 +156,15 @@ export async function POST(req: Request) {
         }
         break;
       }
+      case "account.updated": {
+        // Connect onboarding progress for a broker's connected account.
+        const account = event.data.object as Stripe.Account;
+        await prisma.broker.updateMany({
+          where: { stripeAccountId: account.id },
+          data: { payoutsEnabled: account.payouts_enabled === true },
+        });
+        break;
+      }
       default:
         // unhandled event type — debug row is still written below
         break;

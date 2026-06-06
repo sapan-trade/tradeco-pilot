@@ -6,6 +6,10 @@ export function StatusPill({ status }: { status: string }) {
       case "NEEDS_REVIEW": return "pill pill-needs";
       case "BROKER_APPROVED": return "pill pill-approved";
       case "BROKER_REJECTED": return "pill pill-rejected";
+      case "APPROVED": return "pill pill-auto";
+      case "SUSPENDED": return "pill pill-needs";
+      case "PAID": return "pill pill-auto";
+      case "FAILED": return "pill pill-needs";
       case "OVERRIDDEN": return "pill pill-approved";
       case "DRAFT": return "pill pill-draft";
       case "SUBMITTED": return "pill pill-submitted";

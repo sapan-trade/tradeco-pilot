@@ -25,3 +25,17 @@ export function requireRole(...allowed: OrgRole[]) {
     return next();
   });
 }
+
+/**
+ * Platform-level (cross-org) broker gate. Unlike `requireRole`, this is NOT org-scoped:
+ * it resolves the marketplace `Broker` profile by user id and requires it be APPROVED.
+ * Injects `ctx.broker` for downstream procedures.
+ */
+export const approvedBrokerProcedure = authedProcedure.use(async ({ ctx, next }) => {
+  const broker = await ctx.prisma.broker.findUnique({ where: { userId: ctx.user.id } });
+  if (!broker) throw new TRPCError({ code: "FORBIDDEN", message: "Not a registered broker" });
+  if (broker.status !== "APPROVED") {
+    throw new TRPCError({ code: "FORBIDDEN", message: `Broker not approved (status: ${broker.status})` });
+  }
+  return next({ ctx: { ...ctx, broker } });
+});
