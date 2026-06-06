@@ -45,6 +45,7 @@ function Nav({ signedIn }: { signedIn: boolean }) {
         <a href="#examples">Examples</a>
         <a href="#roi">ROI</a>
         <a href="#pricing">Pricing</a>
+        <Link href="/lookup">Free HS lookup</Link>
         {signedIn ? (
           <Link href="/dashboard" className="btn-primary">Dashboard <ArrowRight size={14} /></Link>
         ) : (

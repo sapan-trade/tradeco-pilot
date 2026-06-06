@@ -4,6 +4,10 @@ const isPublic = createRouteMatcher([
   "/",
   "/sign-in(.*)",
   "/sign-up(.*)",
+  "/lookup(.*)", // free public HS-code lookup (lead gen)
+  "/hs-code(.*)", // public SEO directory
+  "/sitemap.xml",
+  "/robots.txt",
   "/api/webhooks/(.*)",
   "/api/inngest(.*)",
   "/api/connectors/upload/put(.*)", // S3 stub PUT endpoint
