@@ -4,6 +4,7 @@ import type { Metadata } from "next";
 import { generateHsCode } from "@/lib/ai";
 import { lookupDutyRateBps } from "@/server/integrations/hts";
 import { getRateLimiter } from "@/server/integrations/ratelimit";
+import { track } from "@/server/services/telemetry";
 import { Disclaimer } from "@/components/Disclaimer";
 
 export const metadata: Metadata = {
@@ -46,6 +47,7 @@ export default async function LookupPage({
         rationale: ai.rationale,
         dutyPct: `${(lookupDutyRateBps(ai.hsCode) / 100).toFixed(2)}%`,
       };
+      await track("public_lookup", { props: { hsCode: ai.hsCode } });
     }
   }
 

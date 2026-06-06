@@ -2,6 +2,7 @@ import { z } from "zod";
 import { TRPCError } from "@trpc/server";
 import { router, orgProcedure, requireRole } from "../init";
 import { createStripeClient } from "@/server/integrations/stripe";
+import { track } from "@/server/services/telemetry";
 
 const stripe = createStripeClient();
 
@@ -31,6 +32,7 @@ export const billingRouter = router({
     .input(z.object({ tier: z.enum(["STARTER", "GROWTH", "PRO"]) }))
     .mutation(async ({ ctx, input }) => {
       const { url } = await stripe.createCheckoutSession({ orgId: ctx.org.id, tier: input.tier });
+      await track("checkout_started", { userId: ctx.user.id, orgId: ctx.org.id, props: { tier: input.tier } });
       return { url };
     }),
 

@@ -3,6 +3,7 @@ import { TRPCError } from "@trpc/server";
 import { router, orgProcedure } from "../init";
 import { writeAuditLog } from "@/server/services/audit";
 import { runCsvImport } from "@/server/services/csv-importer";
+import { track } from "@/server/services/telemetry";
 import type { Sku } from "@prisma/client";
 
 const SkuInput = z.object({
@@ -52,6 +53,7 @@ export const skuRouter = router({
       subject: `sku:${sku.id}`,
       payload: { id: sku.id, title: sku.title },
     });
+    await track("sku_created", { userId: ctx.user.id, orgId: ctx.org.id, props: { source: "manual" } });
     return toDto(sku);
   }),
 

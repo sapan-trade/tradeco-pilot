@@ -2,6 +2,7 @@ import { z } from "zod";
 import { TRPCError } from "@trpc/server";
 import { router, authedProcedure, approvedBrokerProcedure } from "../init";
 import { createStripeClient } from "@/server/integrations/stripe";
+import { track } from "@/server/services/telemetry";
 
 const stripe = createStripeClient();
 
@@ -39,6 +40,7 @@ export const brokerPortalRouter = router({
           licenseDocToken: input.licenseDocToken ?? null,
         },
       });
+      await track("broker_applied", { userId: ctx.user.id });
       return { id: broker.id, status: broker.status };
     }),
 

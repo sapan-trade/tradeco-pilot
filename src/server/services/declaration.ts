@@ -1,5 +1,6 @@
 import { prisma } from "@/lib/db";
 import { writeAuditLog } from "./audit";
+import { track } from "./telemetry";
 import { createStripeClient } from "@/server/integrations/stripe";
 
 const stripe = createStripeClient();
@@ -63,6 +64,7 @@ export async function createDeclaration(input: {
     subject: `declaration:${declaration.id}`,
     payload: { classificationId: c.id, hsCode: c.hsCode },
   });
+  await track("declaration_drafted", { userId: input.userId, orgId: input.orgId });
 
   return declaration;
 }
@@ -90,6 +92,7 @@ export async function submitDeclaration(args: {
     subject: `declaration:${d.id}`,
     payload: { status: "SUBMITTED" },
   });
+  await track("declaration_submitted", { userId: args.userId, orgId: args.orgId });
 
   // Phase 2: meter inline. Production path (Phase 3+) will fire `declaration/submitted`
   // via Inngest so retries are durable and the Stripe call doesn't block the request.

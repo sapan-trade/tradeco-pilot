@@ -20,6 +20,19 @@ model User {
   notifications Notification[]
 }
 
+/// Lightweight product-analytics event log (self-hosted telemetry). Best-effort writes.
+model AnalyticsEvent {
+  id        String   @id @default(cuid())
+  name      String
+  userId    String?
+  orgId     String?
+  props     Json     @default("{}")
+  createdAt DateTime @default(now())
+
+  @@index([name, createdAt])
+  @@index([createdAt])
+}
+
 enum NotificationType {
   REGULATORY_ALERT
   BROKER_DECISION

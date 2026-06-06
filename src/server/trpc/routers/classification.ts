@@ -4,6 +4,7 @@ import { router, orgProcedure, requireRole } from "../init";
 import { scheduleClassification } from "@/server/services/classifier";
 import { writeAuditLog } from "@/server/services/audit";
 import { getRateLimiter } from "@/server/integrations/ratelimit";
+import { track } from "@/server/services/telemetry";
 
 const HS_RE = /^\d{4}\.\d{2}\.\d{4}$/;
 const STATUSES = ["PENDING", "AUTO_APPROVED", "NEEDS_REVIEW", "BROKER_APPROVED", "BROKER_REJECTED", "OVERRIDDEN"] as const;
@@ -61,6 +62,11 @@ export const classificationRouter = router({
       const updated = await ctx.prisma.classification.findUniqueOrThrow({
         where: { id: classification.id },
         select: { id: true, status: true },
+      });
+      await track("classification_run", {
+        userId: ctx.user.id,
+        orgId: ctx.org.id,
+        props: { status: updated.status },
       });
       return { classificationId: updated.id, status: updated.status };
     }),
