@@ -1,0 +1,132 @@
+import Link from "next/link";
+import { notFound } from "next/navigation";
+import { getServerCaller } from "@/lib/server-caller";
+import { prisma } from "@/lib/db";
+import { PrintButton } from "@/components/PrintButton";
+
+const usd = (cents?: number | null) => (cents == null ? "—" : `$${(cents / 100).toFixed(2)}`);
+const pct = (bps?: number | null) => (bps == null ? "—" : `${(bps / 100).toFixed(2)}%`);
+
+interface PackageJson {
+  hsCode?: string;
+  confidence?: number;
+  destination?: string;
+  skuTitle?: string;
+  supplierCountry?: string | null;
+  unitValueCents?: number | null;
+  landedCost?: {
+    dutyRateBps?: number;
+    vatRateBps?: number;
+    freightCents?: number;
+    feesCents?: number;
+    totalLandedCents?: number;
+  } | null;
+  snapshotAt?: string;
+}
+
+export default async function InvoicePage({ params }: { params: Promise<{ id: string }> }) {
+  const { id } = await params;
+  const { caller, ctx } = await getServerCaller();
+  if (!ctx.org) return <div className="note">Not authenticated.</div>;
+
+  let d;
+  try {
+    d = await caller.declaration.get({ id });
+  } catch {
+    notFound();
+  }
+  const org = await prisma.organization.findUnique({
+    where: { id: ctx.org.id },
+    select: { name: true, country: true },
+  });
+  const pkg = (d.packageJson ?? {}) as PackageJson;
+  const lc = pkg.landedCost ?? null;
+  const ref = d.shipmentRef ?? d.id.slice(0, 8).toUpperCase();
+  const unitValueCents = pkg.unitValueCents ?? null;
+  const dutyCents =
+    unitValueCents != null && lc?.dutyRateBps != null
+      ? Math.round((unitValueCents * lc.dutyRateBps) / 10000)
+      : null;
+  const vatCents =
+    unitValueCents != null && dutyCents != null && lc?.vatRateBps != null
+      ? Math.round(((unitValueCents + dutyCents + (lc.freightCents ?? 0)) * lc.vatRateBps) / 10000)
+      : null;
+
+  return (
+    <div className="invoice">
+      <div className="no-print" style={{ display: "flex", justifyContent: "space-between", marginBottom: 16 }}>
+        <Link href={`/declarations/${id}`}>← Back to declaration</Link>
+        <PrintButton />
+      </div>
+
+      <div className="invoice-head">
+        <div>
+          <div className="invoice-title">Commercial Invoice</div>
+          <div style={{ fontSize: 13, color: "#444" }}>Customs declaration · for import clearance</div>
+        </div>
+        <div className="invoice-meta">
+          <div><strong>Invoice #</strong> {ref}</div>
+          <div><strong>Date</strong> {new Date(d.createdAt).toLocaleDateString()}</div>
+          <div><strong>Status</strong> {d.status}</div>
+        </div>
+      </div>
+
+      <div className="invoice-parties">
+        <div className="invoice-party">
+          <h4>Exporter / Seller</h4>
+          <div><strong>{org?.name ?? "—"}</strong></div>
+          <div>Country: {org?.country ?? "—"}</div>
+        </div>
+        <div className="invoice-party">
+          <h4>Destination</h4>
+          <div><strong>{d.destination}</strong></div>
+          <div>Country of origin: {pkg.supplierCountry ?? "—"}</div>
+        </div>
+      </div>
+
+      <table>
+        <thead>
+          <tr>
+            <th>Description</th>
+            <th>HS code</th>
+            <th>Origin</th>
+            <th style={{ textAlign: "right" }}>Qty</th>
+            <th style={{ textAlign: "right" }}>Unit value</th>
+            <th style={{ textAlign: "right" }}>Line total</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td>{pkg.skuTitle ?? "—"}</td>
+            <td><code>{pkg.hsCode ?? "—"}</code></td>
+            <td>{pkg.supplierCountry ?? "—"}</td>
+            <td style={{ textAlign: "right" }}>1</td>
+            <td style={{ textAlign: "right" }}>{usd(pkg.unitValueCents)}</td>
+            <td style={{ textAlign: "right" }}>{usd(pkg.unitValueCents)}</td>
+          </tr>
+        </tbody>
+      </table>
+
+      <table className="invoice-totals">
+        <tbody>
+          <tr><td>Goods value</td><td style={{ textAlign: "right" }}>{usd(pkg.unitValueCents)}</td></tr>
+          <tr><td>Duty ({pct(lc?.dutyRateBps)})</td><td style={{ textAlign: "right" }}>{usd(dutyCents)}</td></tr>
+          <tr><td>VAT / tax ({pct(lc?.vatRateBps)})</td><td style={{ textAlign: "right" }}>{usd(vatCents)}</td></tr>
+          <tr><td>Freight</td><td style={{ textAlign: "right" }}>{usd(lc?.freightCents)}</td></tr>
+          <tr><td>Fees</td><td style={{ textAlign: "right" }}>{usd(lc?.feesCents)}</td></tr>
+          <tr style={{ fontWeight: 800, borderTop: "2px solid #111" }}>
+            <td>Total landed cost</td>
+            <td style={{ textAlign: "right" }}>{usd(lc?.totalLandedCents)}</td>
+          </tr>
+        </tbody>
+      </table>
+
+      <div className="invoice-foot">
+        I declare the above information to be true and correct to the best of my knowledge.
+        HS classification confidence: {pkg.confidence != null ? `${Math.round(pkg.confidence * 100)}%` : "—"}.
+        Generated by TradeCo-Pilot on {new Date().toLocaleString()}.
+        {pkg.snapshotAt && ` Cost snapshot taken ${new Date(pkg.snapshotAt).toLocaleDateString()}.`}
+      </div>
+    </div>
+  );
+}

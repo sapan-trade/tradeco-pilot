@@ -94,13 +94,18 @@ export default async function DeclarationDetailPage({ params }: { params: Promis
         </tbody>
       </table>
 
-      {d.status === "DRAFT" && (
-        <form action={submit} className="inline">
-          <SubmitButton pendingText="Submitting…" confirm="Submit this declaration? This files it and uses one credit.">
-            Submit declaration
-          </SubmitButton>
-        </form>
-      )}
+      <div style={{ display: "flex", gap: 12, alignItems: "center", marginTop: 8 }}>
+        {d.status === "DRAFT" && (
+          <form action={submit} className="inline">
+            <SubmitButton pendingText="Submitting…" confirm="Submit this declaration? This files it and uses one credit.">
+              Submit declaration
+            </SubmitButton>
+          </form>
+        )}
+        <Link href={`/declarations/${id}/invoice`} className="btn-secondary" style={{ padding: "8px 14px" }}>
+          View / print invoice
+        </Link>
+      </div>
     </>
   );
 }

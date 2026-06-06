@@ -284,6 +284,28 @@ button:disabled { opacity: 0.6; cursor: not-allowed; transform: none; box-shadow
 .stat-card-value { font-size: 32px; font-weight: 700; letter-spacing: -0.02em; color: var(--text-primary); line-height: 1; }
 .stat-card-sub { color: var(--text-muted); font-size: 12px; margin-top: 4px; }
 
+/* Printable customs invoice */
+.invoice { max-width: 800px; margin: 0 auto; background: #fff; color: #111; padding: 16px; }
+.invoice-head { display: flex; justify-content: space-between; align-items: flex-start; border-bottom: 2px solid #111; padding-bottom: 16px; margin-bottom: 20px; }
+.invoice-title { font-size: 22px; font-weight: 800; letter-spacing: -0.01em; }
+.invoice-meta { text-align: right; font-size: 13px; color: #444; }
+.invoice-parties { display: grid; grid-template-columns: 1fr 1fr; gap: 24px; margin-bottom: 20px; }
+.invoice-party h4 { font-size: 11px; text-transform: uppercase; letter-spacing: 0.5px; color: #666; margin-bottom: 6px; }
+.invoice table { border: 1px solid #ddd; }
+.invoice th { background: #f3f4f6; }
+.invoice-totals { margin-top: 16px; margin-left: auto; max-width: 320px; }
+.invoice-totals td { padding: 6px 10px; }
+.invoice-foot { margin-top: 28px; font-size: 12px; color: #666; border-top: 1px solid #ddd; padding-top: 12px; }
+
+@media print {
+  .sidebar, .mobile-topbar { display: none !important; }
+  .layout { grid-template-columns: 1fr; display: block; }
+  .main { padding: 0; max-width: none; }
+  .no-print { display: none !important; }
+  body { background: #fff; }
+  .invoice { padding: 0; }
+}
+
 /* Mobile */
 @media (max-width: 900px) {
   .hero-grid { grid-template-columns: 1fr; }
