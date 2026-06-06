@@ -61,7 +61,21 @@ export default async function DashboardLayout({ children }: { children: React.Re
           </div>
         </div>
       </nav>
-      <main className="main">{children}</main>
+      <div style={{ display: "flex", flexDirection: "column", minWidth: 0 }}>
+        <div className="mobile-topbar">
+          <Link href="/dashboard">Overview</Link>
+          <Link href="/skus">SKUs</Link>
+          <Link href="/classifications">Classifications</Link>
+          <Link href="/declarations">Declarations</Link>
+          <Link href="/connectors">Connectors</Link>
+          <Link href="/regulatory">Regulatory</Link>
+          <Link href="/audit">Audit</Link>
+          <Link href="/settings/billing">Billing</Link>
+          <Link href="/broker/dashboard">Broker</Link>
+          {ctx.org.role === "ADMIN" && <Link href="/admin/brokers">Admin</Link>}
+        </div>
+        <main className="main">{children}</main>
+      </div>
     </div>
   );
 }

@@ -6,6 +6,7 @@ import { prisma } from "@/lib/db";
 import { getObjectStore } from "@/server/integrations/s3";
 import { runCsvImport } from "@/server/services/csv-importer";
 import { normalizeShopDomain } from "@/server/integrations/shopify";
+import { SubmitButton } from "@/components/SubmitButton";
 
 export default async function ConnectorsPage({
   searchParams,
@@ -85,7 +86,7 @@ export default async function ConnectorsPage({
           Shopify store
           <input name="shop" placeholder="mystore  (or mystore.myshopify.com)" required />
         </label>
-        <button type="submit">Connect Shopify</button>
+        <SubmitButton pendingText="Connecting…">Connect Shopify</SubmitButton>
       </form>
 
       <h3>Connected</h3>
@@ -133,7 +134,7 @@ export default async function ConnectorsPage({
       </p>
       <form action={uploadCsv} className="stack">
         <label>Paste CSV<textarea name="csv" rows={6} placeholder="title,description,supplier_country,unit_value_cents&#10;Mug,Porcelain coffee mug,MX,800" /></label>
-        <button type="submit">Import</button>
+        <SubmitButton pendingText="Importing…">Import</SubmitButton>
       </form>
 
       <h3>Recent imports</h3>

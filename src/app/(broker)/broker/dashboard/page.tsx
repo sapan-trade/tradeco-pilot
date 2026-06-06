@@ -2,6 +2,7 @@ import Link from "next/link";
 import { redirect } from "next/navigation";
 import { getServerCaller } from "@/lib/server-caller";
 import { StatusPill } from "@/components/StatusPill";
+import { SubmitButton } from "@/components/SubmitButton";
 
 const usd = (cents: number) => `$${(cents / 100).toFixed(2)}`;
 
@@ -92,14 +93,18 @@ export default async function BrokerDashboardPage({
       <h2 style={{ marginTop: 24 }}>Payouts</h2>
       <div style={{ display: "flex", gap: 12, alignItems: "center", flexWrap: "wrap", margin: "12px 0" }}>
         <form action={startOnboarding} className="inline">
-          <button type="submit" className={me.payoutsEnabled ? "ghost" : ""}>
+          <SubmitButton className={me.payoutsEnabled ? "ghost" : undefined} pendingText="Opening Stripe…">
             {me.stripeConnected ? "Manage Stripe payouts" : "Set up Stripe payouts"}
-          </button>
+          </SubmitButton>
         </form>
         <form action={payout} className="inline">
-          <button type="submit" disabled={!me.payoutsEnabled || me.earnings.pendingCents === 0}>
+          <SubmitButton
+            pendingText="Sending…"
+            disabled={!me.payoutsEnabled || me.earnings.pendingCents === 0}
+            confirm={`Request a payout of ${usd(me.earnings.pendingCents)} to your bank?`}
+          >
             Request payout ({usd(me.earnings.pendingCents)})
-          </button>
+          </SubmitButton>
         </form>
       </div>
 

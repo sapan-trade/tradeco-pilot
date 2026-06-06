@@ -1,5 +1,6 @@
 import { redirect } from "next/navigation";
 import { getServerCaller } from "@/lib/server-caller";
+import { SubmitButton } from "@/components/SubmitButton";
 
 export default async function BrokerApplyPage({
   searchParams,
@@ -57,7 +58,7 @@ export default async function BrokerApplyPage({
           License country (ISO-2)
           <input name="licenseCountry" placeholder="US" required maxLength={2} />
         </label>
-        <button type="submit">Submit application</button>
+        <SubmitButton pendingText="Submitting…">Submit application</SubmitButton>
       </form>
 
       <p style={{ fontSize: 13, color: "var(--text-muted)", maxWidth: 560 }}>

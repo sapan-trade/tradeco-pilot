@@ -4,29 +4,61 @@ import { redirect } from "next/navigation";
 import { getServerCaller } from "@/lib/server-caller";
 import { StatusPill } from "@/components/StatusPill";
 import { ConfidenceBadge } from "@/components/ConfidenceBadge";
+import { SubmitButton } from "@/components/SubmitButton";
+import { Banner } from "@/components/Banner";
 
-export default async function ClassificationsPage() {
+export default async function ClassificationsPage({
+  searchParams,
+}: {
+  searchParams: Promise<{ ok?: string; status?: string; error?: string }>;
+}) {
   const { caller, ctx } = await getServerCaller();
   if (!ctx.org) return <div className="note">Not authenticated.</div>;
   const { items } = await caller.classification.list({});
+  const sp = await searchParams;
 
   async function estimateAndDraft(formData: FormData) {
     "use server";
     const { caller } = await getServerCaller();
     const classificationId = String(formData.get("classificationId"));
-    await caller.landedCost.estimate({ classificationId });
-    await caller.declaration.create({ classificationId });
+    try {
+      await caller.landedCost.estimate({ classificationId });
+      await caller.declaration.create({ classificationId });
+    } catch {
+      redirect("/classifications?error=draft");
+    }
     revalidatePath("/declarations");
     revalidatePath("/classifications");
     // Take the user to the draft they just created — otherwise the click looks like a no-op.
-    redirect("/declarations");
+    redirect("/declarations?ok=drafted");
   }
+
+  const classifiedReview = sp.ok === "classified" && sp.status === "NEEDS_REVIEW";
+  const classifiedAuto = sp.ok === "classified" && sp.status === "AUTO_APPROVED";
 
   return (
     <>
       <h1>Classifications</h1>
+
+      {classifiedAuto && (
+        <Banner kind="success">
+          Classified and auto-approved — confidence was high enough to skip review.
+        </Banner>
+      )}
+      {classifiedReview && (
+        <Banner kind="info">
+          Classified, but confidence was low — it&apos;s been routed to a licensed broker for review.
+        </Banner>
+      )}
+      {sp.ok === "classified" && !classifiedAuto && !classifiedReview && (
+        <Banner kind="success">Classification complete.</Banner>
+      )}
+      {sp.error === "draft" && <Banner kind="error">Couldn&apos;t draft the declaration — please retry.</Banner>}
+
       {items.length === 0 ? (
-        <div className="empty">No classifications yet. Add a SKU and click Classify.</div>
+        <div className="empty">
+          No classifications yet. <Link href="/skus">Add a SKU and click Classify</Link> to get started.
+        </div>
       ) : (
         <table>
           <thead>
@@ -53,7 +85,7 @@ export default async function ClassificationsPage() {
                   <Link href={`/skus/${c.skuId}`}>SKU</Link>{" · "}
                   <form action={estimateAndDraft} className="inline">
                     <input type="hidden" name="classificationId" value={c.id} />
-                    <button type="submit" className="ghost">Draft declaration</button>
+                    <SubmitButton className="ghost" pendingText="Drafting…">Draft declaration</SubmitButton>
                   </form>
                 </td>
               </tr>

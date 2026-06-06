@@ -3,6 +3,7 @@ import { redirect, notFound } from "next/navigation";
 import { getServerCaller } from "@/lib/server-caller";
 import { ConfidenceBadge } from "@/components/ConfidenceBadge";
 import { StatusPill } from "@/components/StatusPill";
+import { SubmitButton } from "@/components/SubmitButton";
 
 const usd = (cents: number) => `$${(cents / 100).toFixed(2)}`;
 
@@ -72,7 +73,7 @@ export default async function MarketplaceCasePage({ params }: { params: Promise<
         <>
           {!review.claimedByMe && (
             <form action={claim} className="inline" style={{ marginBottom: 12 }}>
-              <button type="submit">Claim this case</button>
+              <SubmitButton pendingText="Claiming…">Claim this case</SubmitButton>
               <span style={{ marginLeft: 10, fontSize: 13, color: "var(--text-muted)" }}>
                 Reserve it so no one else picks it up.
               </span>
@@ -86,9 +87,9 @@ export default async function MarketplaceCasePage({ params }: { params: Promise<
               <input name="correctedHsCode" placeholder="6109.10.0099" />
             </label>
             <div style={{ display: "flex", gap: 8 }}>
-              <button name="decision" value="APPROVED" type="submit">Approve</button>
-              <button name="decision" value="CORRECTED" type="submit" className="ghost">Correct</button>
-              <button name="decision" value="REJECTED" type="submit" className="danger">Reject</button>
+              <SubmitButton name="decision" value="APPROVED" pendingText="Saving…">Approve</SubmitButton>
+              <SubmitButton name="decision" value="CORRECTED" className="ghost" pendingText="Saving…">Correct</SubmitButton>
+              <SubmitButton name="decision" value="REJECTED" className="danger" pendingText="Saving…">Reject</SubmitButton>
             </div>
           </form>
         </>

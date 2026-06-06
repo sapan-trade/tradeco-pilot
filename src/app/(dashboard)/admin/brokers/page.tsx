@@ -1,6 +1,7 @@
 import { revalidatePath } from "next/cache";
 import { getServerCaller } from "@/lib/server-caller";
 import { StatusPill } from "@/components/StatusPill";
+import { SubmitButton } from "@/components/SubmitButton";
 
 export default async function AdminBrokersPage() {
   const { caller, ctx } = await getServerCaller();
@@ -61,12 +62,12 @@ export default async function AdminBrokersPage() {
                   <div style={{ display: "flex", gap: 6, alignItems: "center", flexWrap: "wrap" }}>
                     <form action={approve} className="inline">
                       <input type="hidden" name="brokerId" value={b.id} />
-                      <button type="submit">Approve</button>
+                      <SubmitButton pendingText="Approving…" confirm={`Approve ${b.email} as a verified broker?`}>Approve</SubmitButton>
                     </form>
                     <form action={reject} className="inline" style={{ display: "flex", gap: 4 }}>
                       <input type="hidden" name="brokerId" value={b.id} />
                       <input name="reason" placeholder="Reason" style={{ width: 120 }} />
-                      <button type="submit" className="danger">Reject</button>
+                      <SubmitButton className="danger" pendingText="Rejecting…">Reject</SubmitButton>
                     </form>
                   </div>
                 </td>

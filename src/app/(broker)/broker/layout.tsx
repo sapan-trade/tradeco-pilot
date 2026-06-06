@@ -40,7 +40,15 @@ export default async function BrokerPortalLayout({ children }: { children: React
           <UserButton />
         </div>
       </nav>
-      <main className="main">{children}</main>
+      <div style={{ display: "flex", flexDirection: "column", minWidth: 0 }}>
+        <div className="mobile-topbar">
+          {!me && <Link href="/broker/apply">Apply</Link>}
+          {me && <Link href="/broker/dashboard">Dashboard</Link>}
+          {me?.status === "APPROVED" && <Link href="/broker/marketplace">Marketplace</Link>}
+          <Link href="/dashboard">Tenant app</Link>
+        </div>
+        <main className="main">{children}</main>
+      </div>
     </div>
   );
 }
