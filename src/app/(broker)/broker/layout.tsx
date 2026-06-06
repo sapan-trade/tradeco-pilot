@@ -3,6 +3,7 @@ import { UserButton } from "@clerk/nextjs";
 import { getServerCaller } from "@/lib/server-caller";
 import { StatusPill } from "@/components/StatusPill";
 import { SideNav, type NavItem } from "@/components/SideNav";
+import { MobileNav } from "@/components/MobileNav";
 
 /**
  * Broker-portal chrome. Platform-level (NOT org-scoped) — an independent broker may
@@ -56,11 +57,15 @@ export default async function BrokerPortalLayout({ children }: { children: React
       </nav>
       <div style={{ display: "flex", flexDirection: "column", minWidth: 0 }}>
         <div className="mobile-topbar">
-          {!me && <Link href="/broker/apply">Apply</Link>}
-          {me && <Link href="/broker/dashboard">Dashboard</Link>}
-          {me?.status === "APPROVED" && <Link href="/broker/marketplace">Marketplace</Link>}
-          <Link href="/notifications">🔔{unread > 0 ? ` ${unread}` : ""}</Link>
-          <Link href="/dashboard">Tenant app</Link>
+          <MobileNav
+            items={[
+              ...(!me ? [{ href: "/broker/apply", label: "Apply" }] : []),
+              ...(me ? [{ href: "/broker/dashboard", label: "Dashboard" }] : []),
+              ...(me?.status === "APPROVED" ? [{ href: "/broker/marketplace", label: "Marketplace" }] : []),
+              { href: "/notifications", label: unread > 0 ? `🔔 ${unread}` : "🔔" },
+              { href: "/dashboard", label: "Tenant app" },
+            ]}
+          />
         </div>
         <main className="main">{children}</main>
       </div>

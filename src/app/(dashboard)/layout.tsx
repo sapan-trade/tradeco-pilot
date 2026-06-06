@@ -2,6 +2,7 @@ import Link from "next/link";
 import { CreateOrganization, OrganizationSwitcher, UserButton } from "@clerk/nextjs";
 import { getServerCaller } from "@/lib/server-caller";
 import { SideNav } from "@/components/SideNav";
+import { MobileNav } from "@/components/MobileNav";
 
 // Server actions on the dashboard (Classify, Submit, etc.) call Claude which
 // can take 5-15s. Hobby plan default is 10s; bump per-route to 60s.
@@ -80,18 +81,22 @@ export default async function DashboardLayout({ children }: { children: React.Re
       </nav>
       <div style={{ display: "flex", flexDirection: "column", minWidth: 0 }}>
         <div className="mobile-topbar">
-          <Link href="/dashboard">Overview</Link>
-          <Link href="/notifications">🔔{unread > 0 ? ` ${unread}` : ""}</Link>
-          <Link href="/analytics">Analytics</Link>
-          <Link href="/skus">SKUs</Link>
-          <Link href="/classifications">Classifications</Link>
-          <Link href="/declarations">Declarations</Link>
-          <Link href="/connectors">Connectors</Link>
-          <Link href="/regulatory">Regulatory</Link>
-          <Link href="/audit">Audit</Link>
-          <Link href="/settings/billing">Billing</Link>
-          <Link href="/broker/dashboard">Broker</Link>
-          {ctx.org.role === "ADMIN" && <Link href="/admin/brokers">Admin</Link>}
+          <MobileNav
+            items={[
+              { href: "/dashboard", label: "Overview" },
+              { href: "/notifications", label: unread > 0 ? `🔔 ${unread}` : "🔔" },
+              { href: "/analytics", label: "Analytics" },
+              { href: "/skus", label: "SKUs" },
+              { href: "/classifications", label: "Classifications" },
+              { href: "/declarations", label: "Declarations" },
+              { href: "/connectors", label: "Connectors" },
+              { href: "/regulatory", label: "Regulatory" },
+              { href: "/audit", label: "Audit" },
+              { href: "/settings/billing", label: "Billing" },
+              { href: "/broker/dashboard", label: "Broker" },
+              ...(ctx.org.role === "ADMIN" ? [{ href: "/admin/brokers", label: "Admin" }] : []),
+            ]}
+          />
         </div>
         <main className="main">{children}</main>
       </div>
