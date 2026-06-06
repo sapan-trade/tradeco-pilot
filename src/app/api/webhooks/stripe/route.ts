@@ -26,32 +26,6 @@ function mapStatus(s: string) {
   return "CANCELED";
 }
 
-async function logDebug(args: {
-  eventType: string;
-  eventId?: string;
-  signatureOk: boolean;
-  processedOk: boolean;
-  errorMsg?: string;
-  orgIdSeen?: string;
-  bodySnippet?: string;
-}) {
-  try {
-    await prisma.stripeWebhookDebug.create({
-      data: {
-        eventType: args.eventType,
-        eventId: args.eventId ?? null,
-        signatureOk: args.signatureOk,
-        processedOk: args.processedOk,
-        errorMsg: args.errorMsg ?? null,
-        orgIdSeen: args.orgIdSeen ?? null,
-        bodySnippet: args.bodySnippet?.slice(0, 500) ?? null,
-      },
-    });
-  } catch {
-    /* swallow */
-  }
-}
-
 export async function POST(req: Request) {
   const body = await req.text();
   const sig = req.headers.get("stripe-signature");
@@ -59,26 +33,14 @@ export async function POST(req: Request) {
   try {
     event = stripe.constructWebhookEvent(body, sig);
   } catch (err: any) {
-    await logDebug({
-      eventType: "signature-failed",
-      signatureOk: false,
-      processedOk: false,
-      errorMsg: err.message,
-      bodySnippet: body,
-    });
     return NextResponse.json({ error: err.message }, { status: 400 });
   }
-
-  let orgIdSeen: string | undefined;
-  let processedOk = true;
-  let errorMsg: string | undefined;
 
   try {
     switch (event.type) {
       case "checkout.session.completed": {
         const session = event.data.object as Stripe.Checkout.Session;
         const orgId = session.metadata?.orgId;
-        orgIdSeen = orgId;
         if (!orgId) break;
         const tier = (session.metadata?.tier ?? "STARTER") as Tier;
         const customerId =
@@ -114,7 +76,6 @@ export async function POST(req: Request) {
       case "customer.subscription.deleted": {
         const sub = event.data.object as Stripe.Subscription;
         const orgId = sub.metadata?.orgId;
-        orgIdSeen = orgId;
         const priceId = sub.items.data[0]?.price?.id ?? "";
         const tier = (sub.metadata?.tier as Tier) ?? TIER_BY_PRICE[priceId] ?? "STARTER";
         const periodEnd = new Date((sub.current_period_end ?? Math.floor(Date.now() / 1000) + 30 * 24 * 60 * 60) * 1000);
@@ -166,23 +127,12 @@ export async function POST(req: Request) {
         break;
       }
       default:
-        // unhandled event type — debug row is still written below
         break;
     }
   } catch (err: any) {
-    processedOk = false;
-    errorMsg = err.message ?? String(err);
+    console.error(`[stripe-webhook] failed handling ${event.type} (${event.id}):`, err?.message ?? err);
+    return NextResponse.json({ ok: false }, { status: 500 });
   }
 
-  await logDebug({
-    eventType: event.type,
-    eventId: event.id,
-    signatureOk: true,
-    processedOk,
-    errorMsg,
-    orgIdSeen,
-    bodySnippet: body,
-  });
-
-  return NextResponse.json({ ok: processedOk });
+  return NextResponse.json({ ok: true });
 }

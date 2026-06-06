@@ -3,14 +3,31 @@ import { TRPCError } from "@trpc/server";
 import { router, orgProcedure, requireRole } from "../init";
 import { scheduleClassification } from "@/server/services/classifier";
 import { writeAuditLog } from "@/server/services/audit";
+import { getRateLimiter } from "@/server/integrations/ratelimit";
 
 const HS_RE = /^\d{4}\.\d{2}\.\d{4}$/;
 const STATUSES = ["PENDING", "AUTO_APPROVED", "NEEDS_REVIEW", "BROKER_APPROVED", "BROKER_REJECTED", "OVERRIDDEN"] as const;
+
+// Classification calls Claude (it costs money), so cap how fast one org can fire it.
+const CLASSIFY_LIMIT = 60;
+const CLASSIFY_WINDOW_MS = 60_000;
 
 export const classificationRouter = router({
   run: orgProcedure
     .input(z.object({ skuId: z.string(), destination: z.string().length(2) }))
     .mutation(async ({ ctx, input }) => {
+      const rl = await getRateLimiter().consume(
+        `classify:${ctx.org.id}`,
+        CLASSIFY_LIMIT,
+        CLASSIFY_WINDOW_MS
+      );
+      if (!rl.allowed) {
+        throw new TRPCError({
+          code: "TOO_MANY_REQUESTS",
+          message: "Classification rate limit reached — try again in a minute.",
+        });
+      }
+
       const sku = await ctx.prisma.sku.findFirst({
         where: { id: input.skuId, orgId: ctx.org.id },
       });
