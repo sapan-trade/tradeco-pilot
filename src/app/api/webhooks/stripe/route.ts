@@ -77,6 +77,7 @@ export async function POST(req: Request) {
         const sub = event.data.object as Stripe.Subscription;
         const orgId = sub.metadata?.orgId;
         const priceId = sub.items.data[0]?.price?.id ?? "";
+        const subscriptionItemId = sub.items.data[0]?.id ?? null;
         const tier = (sub.metadata?.tier as Tier) ?? TIER_BY_PRICE[priceId] ?? "STARTER";
         const periodEnd = new Date((sub.current_period_end ?? Math.floor(Date.now() / 1000) + 30 * 24 * 60 * 60) * 1000);
 
@@ -93,6 +94,7 @@ export async function POST(req: Request) {
               status: mapStatus(sub.status),
               stripeCustomerId: customerId,
               stripeSubscriptionId: sub.id,
+              stripeSubscriptionItemId: subscriptionItemId,
               skuAllowance: ALLOWANCE[tier],
               currentPeriodEnd: periodEnd,
             },
@@ -100,6 +102,7 @@ export async function POST(req: Request) {
               tier,
               status: mapStatus(sub.status),
               stripeSubscriptionId: sub.id,
+              stripeSubscriptionItemId: subscriptionItemId,
               skuAllowance: ALLOWANCE[tier],
               currentPeriodEnd: periodEnd,
             },
@@ -110,6 +113,7 @@ export async function POST(req: Request) {
             data: {
               tier,
               status: mapStatus(sub.status),
+              stripeSubscriptionItemId: subscriptionItemId,
               skuAllowance: ALLOWANCE[tier],
               currentPeriodEnd: periodEnd,
             },

@@ -5,7 +5,8 @@ import { StatusPill } from "@/components/StatusPill";
 export default async function BillingPage() {
   const { caller, ctx } = await getServerCaller();
   if (!ctx.org) return <div className="note">Not authenticated.</div>;
-  const sub = await caller.billing.subscription();
+  const [sub, usage] = await Promise.all([caller.billing.subscription(), caller.billing.usage()]);
+  const usagePct = usage.unlimited || usage.allowance === 0 ? 0 : Math.min(100, Math.round((usage.used / usage.allowance) * 100));
 
   async function checkout(formData: FormData) {
     "use server";
@@ -32,6 +33,26 @@ export default async function BillingPage() {
           Renews {new Date(sub.currentPeriodEnd).toLocaleDateString()}
         </p>
       )}
+
+      <h2 style={{ marginTop: 16 }}>Usage this period</h2>
+      <div style={{ maxWidth: 420, margin: "8px 0 16px" }}>
+        <div style={{ display: "flex", justifyContent: "space-between", fontSize: 14, marginBottom: 6 }}>
+          <span>Declarations filed</span>
+          <span style={{ color: "var(--text-secondary)" }}>
+            {usage.used}{usage.unlimited ? "" : ` / ${usage.allowance}`}
+          </span>
+        </div>
+        {!usage.unlimited && (
+          <div style={{ background: "#eef2f7", borderRadius: 999, height: 8 }}>
+            <div style={{ width: `${usagePct}%`, height: "100%", borderRadius: 999, background: usage.overage > 0 ? "var(--danger)" : "var(--primary)" }} />
+          </div>
+        )}
+        {usage.overage > 0 && (
+          <p style={{ fontSize: 13, color: "#991b1b", marginTop: 6 }}>
+            {usage.overage} over your plan allowance this period — consider upgrading.
+          </p>
+        )}
+      </div>
 
       {sub.tier === null ? (
         <>

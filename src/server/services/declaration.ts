@@ -1,9 +1,7 @@
 import { prisma } from "@/lib/db";
 import { writeAuditLog } from "./audit";
 import { track } from "./telemetry";
-import { createStripeClient } from "@/server/integrations/stripe";
-
-const stripe = createStripeClient();
+import { recordBillableUsage } from "./usage";
 
 // Only verified classifications may become a customs filing. Drafting off a
 // PENDING / NEEDS_REVIEW / BROKER_REJECTED code would file unvetted paperwork.
@@ -104,5 +102,5 @@ export async function submitDeclaration(args: {
 export async function recordDeclarationUsage(declarationId: string): Promise<void> {
   const d = await prisma.declaration.findUnique({ where: { id: declarationId } });
   if (!d) return;
-  await stripe.recordUsage({ orgId: d.orgId, quantity: 1 });
+  await recordBillableUsage(d.orgId, "declaration", 1);
 }

@@ -20,6 +20,22 @@ model User {
   notifications Notification[]
 }
 
+/// Durable ledger of billable units (e.g. submitted declarations), one row per event.
+/// This is the source of truth for billing — captured even before Stripe metered prices
+/// are wired, so nothing a customer does is ever unbillable.
+model UsageRecord {
+  id             String       @id @default(cuid())
+  orgId          String
+  kind           String
+  quantity       Int          @default(1)
+  stripeReported Boolean      @default(false)
+  stripeRef      String?
+  createdAt      DateTime     @default(now())
+  org            Organization @relation(fields: [orgId], references: [id], onDelete: Cascade)
+
+  @@index([orgId, createdAt])
+}
+
 /// Lightweight product-analytics event log (self-hosted telemetry). Best-effort writes.
 model AnalyticsEvent {
   id        String   @id @default(cuid())
@@ -65,6 +81,7 @@ model Organization {
   settings        Json                 @default("{}")
   memberships     Membership[]
   subscription    Subscription?
+  usageRecords    UsageRecord[]
   skus            Sku[]
   classifications Classification[]
   declarations    Declaration[]
@@ -115,6 +132,7 @@ model Subscription {
   status               SubscriptionStatus
   stripeCustomerId     String             @unique
   stripeSubscriptionId String?            @unique
+  stripeSubscriptionItemId String?
   skuAllowance         Int
   currentPeriodEnd     DateTime
   org                  Organization       @relation(fields: [orgId], references: [id], onDelete: Cascade)

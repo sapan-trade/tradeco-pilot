@@ -3,6 +3,7 @@ import { TRPCError } from "@trpc/server";
 import { router, orgProcedure, requireRole } from "../init";
 import { createStripeClient } from "@/server/integrations/stripe";
 import { track } from "@/server/services/telemetry";
+import { getUsageSummary } from "@/server/services/usage";
 
 const stripe = createStripeClient();
 
@@ -27,6 +28,8 @@ export const billingRouter = router({
       currentPeriodEnd: sub.currentPeriodEnd.toISOString(),
     };
   }),
+
+  usage: orgProcedure.query(({ ctx }) => getUsageSummary(ctx.org.id)),
 
   checkout: requireRole("OWNER")
     .input(z.object({ tier: z.enum(["STARTER", "GROWTH", "PRO"]) }))
