@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { CreateOrganization, OrganizationSwitcher, UserButton } from "@clerk/nextjs";
 import { getServerCaller } from "@/lib/server-caller";
+import { SideNav } from "@/components/SideNav";
 
 // Server actions on the dashboard (Classify, Submit, etc.) call Claude which
 // can take 5-15s. Hobby plan default is 10s; bump per-route to 60s.
@@ -37,27 +38,39 @@ export default async function DashboardLayout({ children }: { children: React.Re
   return (
     <div className="layout">
       <nav className="sidebar">
+        <div className="sidebar-brand">
+          <span className="mark">TC</span>
+          <span>TradeCo-Pilot</span>
+        </div>
         <h2>Tenant</h2>
-        <Link href="/dashboard">Overview</Link>
-        <Link href="/notifications">🔔 Notifications{unread > 0 ? ` (${unread})` : ""}</Link>
-        <Link href="/analytics">Analytics</Link>
-        <Link href="/skus">SKUs</Link>
-        <Link href="/classifications">Classifications</Link>
-        <Link href="/declarations">Declarations</Link>
-        <Link href="/connectors">Connectors</Link>
-        <Link href="/regulatory">Regulatory</Link>
-        <Link href="/audit">Audit log</Link>
-        <Link href="/settings/billing">Billing</Link>
+        <SideNav
+          items={[
+            { href: "/dashboard", label: "Overview", icon: "LayoutDashboard" },
+            { href: "/notifications", label: "Notifications", icon: "Bell", badge: unread },
+            { href: "/analytics", label: "Analytics", icon: "BarChart3" },
+            { href: "/skus", label: "SKUs", icon: "Boxes" },
+            { href: "/classifications", label: "Classifications", icon: "ScanLine" },
+            { href: "/declarations", label: "Declarations", icon: "FileText" },
+            { href: "/connectors", label: "Connectors", icon: "Plug" },
+            { href: "/regulatory", label: "Regulatory", icon: "Scale" },
+            { href: "/audit", label: "Audit log", icon: "ClipboardList" },
+            { href: "/settings/billing", label: "Billing", icon: "CreditCard" },
+          ]}
+        />
         <h2 style={{ marginTop: 20 }}>Broker</h2>
-        <Link href="/queue">Queue</Link>
-        <Link href="/broker/dashboard">Marketplace portal</Link>
+        <SideNav
+          items={[
+            { href: "/queue", label: "Queue", icon: "Inbox" },
+            { href: "/broker/dashboard", label: "Marketplace portal", icon: "Store" },
+          ]}
+        />
         {ctx.org.role === "ADMIN" && (
           <>
             <h2 style={{ marginTop: 20 }}>Admin</h2>
-            <Link href="/admin/brokers">Broker applications</Link>
+            <SideNav items={[{ href: "/admin/brokers", label: "Broker applications", icon: "ShieldCheck" }]} />
           </>
         )}
-        <div style={{ marginTop: 24, padding: 8, background: "#1f2937", borderRadius: 4 }}>
+        <div style={{ marginTop: "auto", padding: 8, background: "#1f2937", borderRadius: 4 }}>
           <div style={{ marginBottom: 8 }}><OrganizationSwitcher hidePersonal /></div>
           <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
             <UserButton />

@@ -2,6 +2,7 @@ import Link from "next/link";
 import { UserButton } from "@clerk/nextjs";
 import { getServerCaller } from "@/lib/server-caller";
 import { StatusPill } from "@/components/StatusPill";
+import { SideNav, type NavItem } from "@/components/SideNav";
 
 /**
  * Broker-portal chrome. Platform-level (NOT org-scoped) — an independent broker may
@@ -25,15 +26,24 @@ export default async function BrokerPortalLayout({ children }: { children: React
     caller.notification.unreadCount(),
   ]);
 
+  const brokerItems: NavItem[] = [
+    ...(!me ? [{ href: "/broker/apply", label: "Apply", icon: "ClipboardList" as const }] : []),
+    ...(me ? [{ href: "/broker/dashboard", label: "Dashboard", icon: "LayoutDashboard" as const }] : []),
+    ...(me?.status === "APPROVED"
+      ? [{ href: "/broker/marketplace", label: "Marketplace", icon: "Store" as const }]
+      : []),
+    { href: "/notifications", label: "Notifications", icon: "Bell", badge: unread },
+  ];
+
   return (
     <div className="layout">
       <nav className="sidebar">
-        <h2>Broker portal</h2>
-        {!me && <Link href="/broker/apply">Apply</Link>}
-        {me && <Link href="/broker/dashboard">Dashboard</Link>}
-        {me?.status === "APPROVED" && <Link href="/broker/marketplace">Marketplace</Link>}
-        <Link href="/notifications">🔔 Notifications{unread > 0 ? ` (${unread})` : ""}</Link>
-        <Link href="/dashboard">← Tenant app</Link>
+        <div className="sidebar-brand">
+          <span className="mark">TC</span>
+          <span>Broker portal</span>
+        </div>
+        <SideNav items={brokerItems} />
+        <Link href="/dashboard" className="navlink" style={{ marginTop: 4 }}>← Tenant app</Link>
 
         <div style={{ marginTop: "auto", paddingTop: 24 }}>
           {me && (

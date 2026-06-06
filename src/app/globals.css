@@ -53,6 +53,15 @@ a:hover { color: var(--primary-dark); }
 .sidebar h2 { margin: 0 0 10px; font-size: 11px; letter-spacing: 1px; color: #94a3b8; text-transform: uppercase; font-weight: 600; }
 .sidebar a { display: block; color: #cbd5e1; padding: 8px 12px; border-radius: 6px; font-size: 14px; margin: 2px 0; transition: all .15s ease; }
 .sidebar a:hover { background: rgba(255,255,255,0.06); color: #fff; text-decoration: none; }
+.sidebar .navlink { display: flex; align-items: center; gap: 10px; }
+.sidebar .navlink span { flex: 1; }
+.sidebar .navlink svg { flex-shrink: 0; opacity: 0.85; }
+.sidebar .navlink.active { background: var(--primary); color: #fff; font-weight: 600; }
+.sidebar .navlink.active:hover { background: var(--primary-dark); }
+.sidebar .navlink.active svg { opacity: 1; }
+.sidebar .navbadge { background: var(--danger); color: #fff; font-size: 11px; font-weight: 700; border-radius: 999px; padding: 1px 7px; }
+.sidebar-brand { display: flex; align-items: center; gap: 9px; padding: 2px 8px 18px; font-weight: 700; color: #fff; font-size: 15px; letter-spacing: -0.01em; }
+.sidebar-brand .mark { width: 28px; height: 28px; border-radius: 7px; background: linear-gradient(135deg, var(--primary), var(--primary-dark)); display: flex; align-items: center; justify-content: center; color: #fff; font-size: 14px; font-weight: 800; flex-shrink: 0; }
 .main { padding: 32px 40px; max-width: 1280px; background: #ffffff; }
 .main h1 { margin-top: 0; font-size: 28px; }
 
