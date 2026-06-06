@@ -13,9 +13,10 @@ model User {
   email       String         @unique
   name        String?
   createdAt   DateTime       @default(now())
-  memberships Membership[]
-  reviews     BrokerReview[] @relation("BrokerUser")
-  auditEvents AuditLog[]
+  memberships   Membership[]
+  reviews       BrokerReview[] @relation("BrokerUser")
+  auditEvents   AuditLog[]
+  brokerProfile Broker?        @relation("BrokerProfile")
 }
 
 /// A customer tenant. All domain data is scoped by orgId.
@@ -174,6 +175,8 @@ model BrokerReview {
   id               String          @id @default(cuid())
   classificationId String          @unique
   brokerUserId     String?
+  claimedByUserId  String?
+  claimedAt        DateTime?
   decision         BrokerDecision?
   correctedHsCode  String?
   notes            String?
@@ -181,8 +184,64 @@ model BrokerReview {
   createdAt        DateTime        @default(now())
   classification   Classification  @relation(fields: [classificationId], references: [id], onDelete: Cascade)
   broker           User?           @relation("BrokerUser", fields: [brokerUserId], references: [id])
+  earning          BrokerEarning?
 
   @@index([brokerUserId, decidedAt])
+  @@index([claimedByUserId])
+}
+
+enum BrokerStatus {
+  PENDING
+  APPROVED
+  REJECTED
+  SUSPENDED
+}
+
+/// Platform-level (cross-org) independent broker profile. One row per user who applies
+/// to take paid review work in the marketplace. Verification: license # + admin approval;
+/// payouts via a Stripe Connect connected account.
+model Broker {
+  id               String         @id @default(cuid())
+  userId           String         @unique
+  licenseNumber    String
+  licenseCountry   String
+  licenseDocToken  String?
+  status           BrokerStatus   @default(PENDING)
+  stripeAccountId  String?
+  payoutsEnabled   Boolean        @default(false)
+  appliedAt        DateTime       @default(now())
+  reviewedAt       DateTime?
+  reviewedByUserId String?
+  rejectionReason  String?
+  user             User           @relation("BrokerProfile", fields: [userId], references: [id], onDelete: Cascade)
+  earnings         BrokerEarning[]
+
+  @@index([status])
+}
+
+enum EarningStatus {
+  PENDING
+  PAID
+  FAILED
+}
+
+/// Ledger of flat-fee earnings a broker accrues per completed marketplace review.
+/// `reviewId` is unique so a decision can only ever accrue one earning (idempotent).
+model BrokerEarning {
+  id               String        @id @default(cuid())
+  brokerId         String
+  brokerUserId     String
+  reviewId         String        @unique
+  amountCents      Int
+  currency         String        @default("usd")
+  status           EarningStatus @default(PENDING)
+  stripeTransferId String?
+  createdAt        DateTime      @default(now())
+  paidAt           DateTime?
+  broker           Broker        @relation(fields: [brokerId], references: [id], onDelete: Cascade)
+  review           BrokerReview  @relation(fields: [reviewId], references: [id], onDelete: Cascade)
+
+  @@index([brokerUserId, status])
 }
 
 /// Computed landed cost snapshot tied to a classification at a point in time. Phase 2.
@@ -263,6 +322,8 @@ model Connector {
   type         ConnectorType
   status       ConnectorStatus @default(PENDING)
   shopDomain   String?
+  shopEmail    String?
+  shopName     String?
   accessToken  String?
   scopes       String[]        @default([])
   lastSyncAt   DateTime?

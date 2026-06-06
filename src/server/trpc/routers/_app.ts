@@ -8,6 +8,9 @@ import { landedCostRouter } from "./landedCost";
 import { regulatoryRouter } from "./regulatory";
 import { auditRouter } from "./audit";
 import { billingRouter } from "./billing";
+import { brokerPortalRouter } from "./brokerPortal";
+import { marketplaceRouter } from "./marketplace";
+import { adminBrokersRouter } from "./adminBrokers";
 
 export const appRouter = router({
   org: orgRouter,
@@ -19,6 +22,9 @@ export const appRouter = router({
   regulatory: regulatoryRouter,
   audit: auditRouter,
   billing: billingRouter,
+  brokerPortal: brokerPortalRouter,
+  marketplace: marketplaceRouter,
+  adminBrokers: adminBrokersRouter,
 });
 
 export type AppRouter = typeof appRouter;

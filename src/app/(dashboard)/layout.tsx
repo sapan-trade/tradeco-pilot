@@ -46,6 +46,13 @@ export default async function DashboardLayout({ children }: { children: React.Re
         <Link href="/settings/billing">Billing</Link>
         <h2 style={{ marginTop: 20 }}>Broker</h2>
         <Link href="/queue">Queue</Link>
+        <Link href="/broker/dashboard">Marketplace portal</Link>
+        {ctx.org.role === "ADMIN" && (
+          <>
+            <h2 style={{ marginTop: 20 }}>Admin</h2>
+            <Link href="/admin/brokers">Broker applications</Link>
+          </>
+        )}
         <div style={{ marginTop: 24, padding: 8, background: "#1f2937", borderRadius: 4 }}>
           <div style={{ marginBottom: 8 }}><OrganizationSwitcher hidePersonal /></div>
           <div style={{ display: "flex", alignItems: "center", gap: 8 }}>

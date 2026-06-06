@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { revalidatePath } from "next/cache";
+import { redirect } from "next/navigation";
 import { getServerCaller } from "@/lib/server-caller";
 import { StatusPill } from "@/components/StatusPill";
 import { ConfidenceBadge } from "@/components/ConfidenceBadge";
@@ -17,6 +18,8 @@ export default async function ClassificationsPage() {
     await caller.declaration.create({ classificationId });
     revalidatePath("/declarations");
     revalidatePath("/classifications");
+    // Take the user to the draft they just created — otherwise the click looks like a no-op.
+    redirect("/declarations");
   }
 
   return (

@@ -5,10 +5,22 @@ import { StatusPill } from "@/components/StatusPill";
 import { prisma } from "@/lib/db";
 import { getObjectStore } from "@/server/integrations/s3";
 import { runCsvImport } from "@/server/services/csv-importer";
+import { normalizeShopDomain } from "@/server/integrations/shopify";
 
-export default async function ConnectorsPage() {
+export default async function ConnectorsPage({
+  searchParams,
+}: {
+  searchParams: Promise<{ error?: string; connected?: string; synced?: string }>;
+}) {
   const { ctx } = await getServerCaller();
-  if (!ctx.org) return <div className="note">Not authenticated.</div>;
+  if (!ctx.org || !ctx.user) return <div className="note">Not authenticated.</div>;
+
+  const sp = await searchParams;
+  const account = await prisma.user.findUnique({
+    where: { id: ctx.user.id },
+    select: { email: true },
+  });
+  const accountEmail = account?.email?.trim().toLowerCase() ?? null;
 
   const connectors = await prisma.connector.findMany({ where: { orgId: ctx.org.id } });
   const jobs = await prisma.importJob.findMany({
@@ -19,8 +31,8 @@ export default async function ConnectorsPage() {
 
   async function connectShopify(formData: FormData) {
     "use server";
-    const shop = String(formData.get("shop") ?? "").trim().toLowerCase();
-    if (!shop) return;
+    const shop = normalizeShopDomain(String(formData.get("shop") ?? ""));
+    if (!shop) redirect("/connectors?error=invalid_shop");
     redirect(`/api/connectors/shopify/start?shop=${encodeURIComponent(shop)}`);
   }
 
@@ -51,11 +63,28 @@ export default async function ConnectorsPage() {
 
       <h2>Shopify</h2>
       <p style={{ color: "#6b7280" }}>
-        OAuth-based connection. In dev (no <code>SHOPIFY_API_KEY</code>) the install URL points
-        to a stub host; the callback handler still runs the full sync against synthetic products.
+        Signed in as <strong>{accountEmail ?? "your account"}</strong>. Enter your store and approve
+        the one-time Shopify prompt — we link it to your account automatically by matching the store
+        owner&apos;s email.
       </p>
+
+      {sp.error === "invalid_shop" && (
+        <div className="note" style={{ background: "#fef2f2", color: "#b91c1c", padding: 12, borderRadius: 8 }}>
+          That doesn&apos;t look like a Shopify store. Enter your store name (e.g. <code>mystore</code>)
+          or its <code>.myshopify.com</code> address.
+        </div>
+      )}
+      {sp.connected === "1" && (
+        <div className="note" style={{ background: "#f0fdf4", color: "#15803d", padding: 12, borderRadius: 8 }}>
+          Shopify connected — synced {sp.synced ?? 0} product{sp.synced === "1" ? "" : "s"}.
+        </div>
+      )}
+
       <form action={connectShopify} className="stack">
-        <label>Shop domain<input name="shop" placeholder="store.myshopify.com" required /></label>
+        <label>
+          Shopify store
+          <input name="shop" placeholder="mystore  (or mystore.myshopify.com)" required />
+        </label>
         <button type="submit">Connect Shopify</button>
       </form>
 
@@ -64,18 +93,35 @@ export default async function ConnectorsPage() {
         <div className="empty">No connectors yet.</div>
       ) : (
         <table>
-          <thead><tr><th>Type</th><th>Shop</th><th>Status</th><th>Last sync</th></tr></thead>
+          <thead><tr><th>Type</th><th>Shop</th><th>Store owner</th><th>Status</th><th>Last sync</th></tr></thead>
           <tbody>
-            {connectors.map((c) => (
-              <tr key={c.id}>
-                <td>{c.type}</td>
-                <td>{c.shopDomain ?? "—"}</td>
-                <td><StatusPill status={c.status} /></td>
-                <td style={{ fontSize: 12, color: "#6b7280" }}>
-                  {c.lastSyncAt ? new Date(c.lastSyncAt).toLocaleString() : "—"}
-                </td>
-              </tr>
-            ))}
+            {connectors.map((c) => {
+              const matches =
+                !!c.shopEmail && !!accountEmail && c.shopEmail.toLowerCase() === accountEmail;
+              return (
+                <tr key={c.id}>
+                  <td>{c.type}</td>
+                  <td>{c.shopDomain ?? "—"}</td>
+                  <td style={{ fontSize: 12 }}>
+                    {c.shopEmail ?? "—"}
+                    {c.shopEmail &&
+                      (matches ? (
+                        <span style={{ color: "#15803d", marginLeft: 6 }} title="Matches your account">
+                          ✓ matches your account
+                        </span>
+                      ) : (
+                        <span style={{ color: "#b45309", marginLeft: 6 }} title="Different from your sign-in email">
+                          ⚠ different email
+                        </span>
+                      ))}
+                  </td>
+                  <td><StatusPill status={c.status} /></td>
+                  <td style={{ fontSize: 12, color: "#6b7280" }}>
+                    {c.lastSyncAt ? new Date(c.lastSyncAt).toLocaleString() : "—"}
+                  </td>
+                </tr>
+              );
+            })}
           </tbody>
         </table>
       )}
