@@ -6,6 +6,8 @@ const isPublic = createRouteMatcher([
   "/sign-up(.*)",
   "/lookup(.*)", // free public HS-code lookup (lead gen)
   "/hs-code(.*)", // public SEO directory
+  "/terms",
+  "/privacy",
   "/sitemap.xml",
   "/robots.txt",
   "/api/webhooks/(.*)",

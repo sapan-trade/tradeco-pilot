@@ -6,6 +6,7 @@ import { StatusPill } from "@/components/StatusPill";
 import { ConfidenceBadge } from "@/components/ConfidenceBadge";
 import { SubmitButton } from "@/components/SubmitButton";
 import { Banner } from "@/components/Banner";
+import { Disclaimer } from "@/components/Disclaimer";
 
 export default async function ClassificationsPage({
   searchParams,
@@ -40,6 +41,7 @@ export default async function ClassificationsPage({
   return (
     <>
       <h1>Classifications</h1>
+      <Disclaimer />
 
       {classifiedAuto && (
         <Banner kind="success">

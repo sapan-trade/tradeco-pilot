@@ -492,8 +492,9 @@ function Footer() {
         <span>© 2026 TradeCo-Pilot</span>
       </div>
       <div style={{ display: "flex", gap: 24 }}>
-        <a href="#why">Why</a>
-        <a href="#pricing">Pricing</a>
+        <Link href="/lookup">Free HS lookup</Link>
+        <Link href="/terms">Terms</Link>
+        <Link href="/privacy">Privacy</Link>
         <Link href="/sign-in">Sign in</Link>
       </div>
     </footer>

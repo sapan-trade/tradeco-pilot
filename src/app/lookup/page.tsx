@@ -4,6 +4,7 @@ import type { Metadata } from "next";
 import { generateHsCode } from "@/lib/ai";
 import { lookupDutyRateBps } from "@/server/integrations/hts";
 import { getRateLimiter } from "@/server/integrations/ratelimit";
+import { Disclaimer } from "@/components/Disclaimer";
 
 export const metadata: Metadata = {
   title: "Free HS Code Lookup — AI tariff classification | TradeCo-Pilot",
@@ -94,6 +95,7 @@ export default async function LookupPage({
             landed-cost estimates, and tariff-change alerts —{" "}
             <Link href="/sign-up"><strong>create a free account →</strong></Link>
           </div>
+          <Disclaimer />
         </div>
       )}
 

@@ -3,7 +3,7 @@ import { loadHsCatalog } from "@/server/integrations/hts";
 
 export default function sitemap(): MetadataRoute.Sitemap {
   const base = (process.env.NEXT_PUBLIC_APP_URL ?? "http://localhost:3000").replace(/\/$/, "");
-  const staticRoutes = ["", "/lookup", "/hs-code", "/sign-up"].map((p) => ({
+  const staticRoutes = ["", "/lookup", "/hs-code", "/sign-up", "/terms", "/privacy"].map((p) => ({
     url: `${base}${p}`,
     lastModified: new Date(),
   }));

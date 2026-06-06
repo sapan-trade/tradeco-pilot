@@ -4,6 +4,7 @@ import { redirect, notFound } from "next/navigation";
 import { getServerCaller } from "@/lib/server-caller";
 import { StatusPill } from "@/components/StatusPill";
 import { SubmitButton } from "@/components/SubmitButton";
+import { Disclaimer } from "@/components/Disclaimer";
 
 const usd = (cents?: number | null) => (cents == null ? "—" : `$${(cents / 100).toFixed(2)}`);
 const pct = (bps?: number | null) => (bps == null ? "—" : `${(bps / 100).toFixed(2)}%`);
@@ -106,6 +107,7 @@ export default async function DeclarationDetailPage({ params }: { params: Promis
           View / print invoice
         </Link>
       </div>
+      <Disclaimer variant="filing" />
     </>
   );
 }
