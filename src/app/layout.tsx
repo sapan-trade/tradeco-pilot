@@ -9,6 +9,7 @@ const inter = Inter({
 });
 
 export const metadata = {
+  metadataBase: new URL(process.env.NEXT_PUBLIC_APP_URL ?? "http://localhost:3000"),
   title: "Clearwise — Tariff codes you can defend",
   description:
     "Broker-verified HS tariff classification for importers and exporters. AI-fast, human-checked, audit-defensible — so your codes hold up at the border.",

@@ -10,6 +10,8 @@ const isPublic = createRouteMatcher([
   "/privacy",
   "/sitemap.xml",
   "/robots.txt",
+  "/opengraph-image(.*)",
+  "/twitter-image(.*)",
   "/api/webhooks/(.*)",
   "/api/inngest(.*)",
   "/api/connectors/upload/put(.*)", // S3 stub PUT endpoint
